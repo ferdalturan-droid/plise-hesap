@@ -847,13 +847,8 @@ function showToast(msg, type) {
 
 function saveOrder() {
   try {
-    // Hesabı sıfırdan çalıştır (cache sorununu önle)
-    calc();
-
     if (!window._calcData) {
-      const enVal = document.getElementById('inp-en').value;
-      const boyVal = document.getElementById('inp-boy').value;
-      showToast(`⚠️ EN=${enVal||'boş'}, BOY=${boyVal||'boş'} — 50mm'den büyük olmalı`, 'warn');
+      showToast('⚠️ Önce EN ve BOY girerek hesap yapın!', 'warn');
       document.getElementById('inp-en').focus();
       return;
     }
