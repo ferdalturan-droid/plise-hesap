@@ -807,7 +807,8 @@ function suggestMusteri() { updateMusteriList(); }
 
 function renderOrderList() {
   const div = document.getElementById('order-list-div');
-  document.getElementById('order-count-badge').textContent = `${orders.length} sipariş`;
+  const totalAdet = orders.reduce((s,o)=>s+(parseInt(o.adet)||1),0);
+  document.getElementById('order-count-badge').textContent = `${orders.length} sipariş · ${totalAdet} adet`;
   if (!orders.length) {
     div.innerHTML = '<div class="empty"><div class="empty-icon">📭</div><p>Henüz sipariş eklenmedi</p></div>';
     document.getElementById('orders-summary').style.display = 'none';
