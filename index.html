@@ -161,7 +161,7 @@
   .btn-yapiliyor { background:#eff6ff; color:#1d4ed8; border:2px solid #2563eb; padding:8px 18px; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer; transition:.15s; }
   .btn-pdf-musteri { background:#7c3aed; color:white; border:none; padding:8px 18px; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer; }
   .btn-pdf-musteri:hover { background:#6d28d9; }
-  .btn-back { background:none; border:none; color:rgba(255,255,255,.7); font-size:22px; font-weight:700; cursor:pointer; padding:0 8px 0 0; line-height:1; }
+  .btn-back { background:rgba(255,255,255,.12); border:none; color:#fff; font-size:14px; font-weight:700; cursor:pointer; padding:7px 14px; line-height:1; border-radius:8px; white-space:nowrap; min-height:38px; }
 
   /* MÜŞTERİ KARTLARI */
   .customer-card { background:white; border:1.5px solid var(--border); border-radius:14px; padding:16px 18px; display:flex; align-items:center; gap:14px; cursor:pointer; transition:.15s; margin-bottom:10px; }
@@ -372,7 +372,7 @@
 <!-- SİPARİŞLER PAGE -->
 <div id="page-orders" style="display:none">
   <div class="topbar" id="orders-topbar">
-    <button class="btn-back no-print" id="orders-back-btn" onclick="showCustomerList()" style="display:none">‹</button>
+    <button class="btn-back no-print" id="orders-back-btn" onclick="showCustomerList()" style="display:none">‹ Müşteriler</button>
     <h2 id="orders-title">Siparişler</h2>
     <span class="badge badge-green" id="order-count-badge" style="margin-right:auto">0</span>
     <button class="btn btn-pdf-musteri no-print" onclick="pdfMusteriSec()">📄 PDF</button>
