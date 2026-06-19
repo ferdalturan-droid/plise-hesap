@@ -354,7 +354,7 @@
         </div>
         <div class="results-grid" id="kesim-grid"></div>
       </div>
-      <div style="display:none"><tbody id="malzeme-tbody"></tbody></div>
+      <div style="display:none"><table><tbody id="malzeme-tbody"></tbody></table></div>
       <div class="card">
         <div class="card-title">Fiyat Özeti</div>
         <div id="fiyat-rows"></div>
@@ -636,7 +636,7 @@ function calcPlise(en, boy, adet, alu, isk) {
     ${ri('KAT',katAdet.toFixed(1),'adet','','amber')}${ri('İP',ipMt,'mt','','amber')}
     ${ri('Bant',bantMt,'mt','× 2 şerit','')}${ri('Plastik Şerit',seritMt,'mt','× 2 adet','')}
     ${ri('Plise Takım',1,'takım','','')}`;
-  document.getElementById('malzeme-tbody').innerHTML = `
+  (document.getElementById('malzeme-tbody')||{innerHTML:''}).innerHTML = `
     <tr><td>Alüminyum (${alu})</td><td>${aluMt.toFixed(3)}</td><td>MT</td><td>${aluP.toFixed(2)} ₺</td><td><b>${aluT.toFixed(2)} ₺</b></td></tr>
     <tr><td>Tül</td><td>${tulM2.toFixed(4)}</td><td>M2</td><td>130.00 ₺</td><td><b>${tulT.toFixed(2)} ₺</b></td></tr>
     <tr><td>İp</td><td>${ipMt.toFixed(2)}</td><td>MT</td><td>0.20 ₺</td><td><b>${ipT.toFixed(2)} ₺</b></td></tr>
@@ -680,7 +680,7 @@ function calcDuble(en, boy, adet, alu, isk) {
     ${ri('KAT',kat.toFixed(3),'adet','','amber')}${ri('İP',ipMt,'mt','','amber')}
     ${ri('Bant',bantMt,'mt','× 4 şerit','')}${ri('Plastik Şerit',seritMt,'mt','× 4 adet','')}
     ${ri('Plise Takım',2,'takım','','')}${ri('Miknatis',miknatis,'takım','','red')}`;
-  document.getElementById('malzeme-tbody').innerHTML = `
+  (document.getElementById('malzeme-tbody')||{innerHTML:''}).innerHTML = `
     <tr><td>Alüminyum (${alu})</td><td>${aluMt.toFixed(3)}</td><td>MT</td><td>${aluP.toFixed(2)} ₺</td><td><b>${aluT.toFixed(2)} ₺</b></td></tr>
     <tr><td>Tül × 2</td><td>${tulM2.toFixed(4)}</td><td>M2</td><td>6.00 ₺</td><td><b>${tulT.toFixed(2)} ₺</b></td></tr>
     <tr><td>İp</td><td>${ipMt.toFixed(2)}</td><td>MT</td><td>0.06 ₺</td><td><b>${ipT.toFixed(2)} ₺</b></td></tr>
@@ -711,7 +711,7 @@ function calcSineklikTekli(en, boy, adet, isk) {
     ${ri('KAT',kat.toFixed(2),'adet','','amber')}
     ${ri('Bant',bantMt,'mt','× 2 şerit','')}${ri('Plastik Şerit',seritMt,'mt','× 2 adet','')}
     ${ri('Plise Takım',1,'takım','','')}`;
-  document.getElementById('malzeme-tbody').innerHTML = `
+  (document.getElementById('malzeme-tbody')||{innerHTML:''}).innerHTML = `
     <tr><td>Kasa Alüminyum Profil (1.9)</td><td>${((kasaEn*2+kasaBoy*2+kanat)/1000).toFixed(3)}</td><td>MT</td><td>—</td><td>—</td></tr>
     <tr><td>Tül</td><td>${((en/1000)*(tulBoy/1000)).toFixed(4)}</td><td>M2</td><td>—</td><td>—</td></tr>
     <tr><td>Bant</td><td>${bantMt.toFixed(2)}</td><td>MT</td><td>—</td><td>—</td></tr>
@@ -740,7 +740,7 @@ function calcSineklikDuble(en, boy, adet, isk) {
     ${ri('KAT',kat.toFixed(2),'adet','','amber')}
     ${ri('Bant',bantMt,'mt','× 2 şerit','')}${ri('Plastik Şerit',seritMt,'mt','× 4 adet','')}
     ${ri('Plise Takım',2,'takım','','')}${ri('Miknatis',1,'takım','','red')}`;
-  document.getElementById('malzeme-tbody').innerHTML = `
+  (document.getElementById('malzeme-tbody')||{innerHTML:''}).innerHTML = `
     <tr><td>Kasa Alüminyum Profil (1.9)</td><td>${((kasaEn*2+kasaBoy*2+kanat*2)/1000).toFixed(3)}</td><td>MT</td><td>—</td><td>—</td></tr>
     <tr><td>Tül × 2</td><td>${((en/1000)*(tulBoy/1000)*2).toFixed(4)}</td><td>M2</td><td>—</td><td>—</td></tr>
     <tr><td>Bant</td><td>${bantMt.toFixed(2)}</td><td>MT</td><td>—</td><td>—</td></tr>
@@ -768,7 +768,7 @@ function calcPerde(en, boy, adet, isk) {
     ${ri('Alüm. Profil',perdeEn,'mm','','blue')}
     ${ri('Yap. Şerit',perdeEn,'mm','','green')}
     ${ri('İp Boyu',ipBoyu,'mm','','amber')}`;
-  document.getElementById('malzeme-tbody').innerHTML = `
+  (document.getElementById('malzeme-tbody')||{innerHTML:''}).innerHTML = `
     <tr><td>Alüminyum Profil</td><td>${(perdeEn/1000).toFixed(3)}</td><td>MT</td><td>—</td><td>—</td></tr>
     <tr><td>Yapışkanlı Şerit</td><td>${(perdeEn/1000).toFixed(3)}</td><td>MT</td><td>—</td><td>—</td></tr>
     <tr><td>İp</td><td>${(ipBoyu/1000).toFixed(3)}</td><td>MT</td><td>—</td><td>—</td></tr>`;
