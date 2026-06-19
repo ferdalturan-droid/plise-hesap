@@ -145,6 +145,21 @@
   .btn-yapiliyor { background:#eff6ff; color:#1d4ed8; border:2px solid #2563eb; padding:8px 18px; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer; transition:.15s; }
   .btn-pdf-musteri { background:#7c3aed; color:white; border:none; padding:8px 18px; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer; }
   .btn-pdf-musteri:hover { background:#6d28d9; }
+  .btn-back { background:none; border:none; color:rgba(255,255,255,.7); font-size:22px; font-weight:700; cursor:pointer; padding:0 8px 0 0; line-height:1; }
+
+  /* MÜŞTERİ KARTLARI */
+  .customer-card { background:white; border:1.5px solid var(--border); border-radius:14px; padding:16px 18px; display:flex; align-items:center; gap:14px; cursor:pointer; transition:.15s; margin-bottom:10px; }
+  .customer-card:hover { border-color:var(--accent); background:#f0fdf4; transform:translateY(-1px); box-shadow:0 4px 12px rgba(22,163,74,.1); }
+  .customer-card-avatar { font-size:24px; width:46px; height:46px; background:#f0fdf4; border-radius:12px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .customer-card-info { flex:1; min-width:0; }
+  .customer-card-info h3 { font-size:16px; font-weight:800; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .customer-card-info p { font-size:12px; color:var(--muted); margin-top:3px; }
+  .customer-card-right { text-align:right; flex-shrink:0; }
+  .customer-card-price { font-size:17px; font-weight:800; color:var(--accent); }
+  .customer-card-arrow { font-size:22px; color:#cbd5e1; flex-shrink:0; }
+  .customer-total-bar { background:var(--sidebar); color:white; border-radius:12px; padding:14px 18px; display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; }
+  .customer-total-bar h3 { font-size:13px; color:rgba(255,255,255,.5); font-weight:600; margin-bottom:2px; }
+  .customer-total-bar .big { font-size:22px; font-weight:900; color:#4ade80; }
 
   /* PDF */
   @media print {
@@ -339,31 +354,27 @@
 
 <!-- SİPARİŞLER PAGE -->
 <div id="page-orders" style="display:none">
-  <div class="topbar">
-    <h2>Siparişler</h2>
-    <button class="btn btn-pdf-musteri no-print" onclick="pdfMusteriSec()">📄 Müşteri PDF</button>
+  <div class="topbar" id="orders-topbar">
+    <button class="btn-back no-print" id="orders-back-btn" onclick="showCustomerList()" style="display:none">‹</button>
+    <h2 id="orders-title">Siparişler</h2>
+    <span class="badge badge-green" id="order-count-badge" style="margin-right:auto">0</span>
+    <button class="btn btn-pdf-musteri no-print" onclick="pdfMusteriSec()">📄 PDF</button>
     <button class="btn btn-gray no-print" onclick="clearOrders()">Temizle</button>
   </div>
   <div class="content">
-    <div style="display:grid;grid-template-columns:1fr 2fr;gap:16px">
-      <div>
-        <div class="card">
-          <div class="section-header">
-            <div class="card-title" style="margin:0">Sipariş Listesi</div>
-            <span class="badge badge-green" id="order-count-badge">0 adet</span>
-          </div>
-          <div class="order-list" id="order-list-div">
-            <div class="empty"><div class="empty-icon">📭</div><p>Henüz sipariş eklenmedi</p></div>
-          </div>
-        </div>
-      </div>
-      <div id="order-detail-div">
-        <div class="empty card" style="padding:40px"><div class="empty-icon">👈</div><p>Soldaki listeden bir sipariş seçin</p></div>
+    <!-- MÜŞTERİ LİSTESİ -->
+    <div id="customer-list-view">
+      <div id="customer-cards-div"></div>
+      <div class="card" id="orders-summary" style="display:none">
+        <div class="card-title">Genel Özet</div>
+        <div id="summary-content"></div>
       </div>
     </div>
-    <div class="card" id="orders-summary" style="display:none">
-      <div class="card-title">Genel Özet</div>
-      <div id="summary-content"></div>
+    <!-- MÜŞTERİ SİPARİŞLERİ -->
+    <div id="customer-orders-view" style="display:none">
+      <div id="customer-total-bar" class="customer-total-bar"></div>
+      <div id="order-list-div"></div>
+      <div id="order-detail-div"></div>
     </div>
   </div>
 </div>
@@ -482,6 +493,7 @@ const ordersDocRef = db.collection('plisehesap').doc('siparisler');
 
 let orders = [];
 let selectedOrder = null;
+let currentCustomer = null;
 
 function saveToFirestore() {
   ordersDocRef.set({ list: orders }).catch(e => console.error('Firestore kayıt hatası:', e));
@@ -806,48 +818,103 @@ function updateMusteriList() {
 function suggestMusteri() { updateMusteriList(); }
 
 function renderOrderList() {
-  const div = document.getElementById('order-list-div');
+  // If in customer view, refresh that; else show customer cards
+  if (currentCustomer) { renderCustomerOrders(); return; }
+  showCustomerList();
+}
+
+function showCustomerList() {
+  currentCustomer = null;
+  selectedOrder = null;
+  document.getElementById('customer-list-view').style.display = 'block';
+  document.getElementById('customer-orders-view').style.display = 'none';
+  document.getElementById('orders-back-btn').style.display = 'none';
+  document.getElementById('orders-title').textContent = 'Siparişler';
+
+  const div = document.getElementById('customer-cards-div');
   const totalAdet = orders.reduce((s,o)=>s+(parseInt(o.adet)||1),0);
   document.getElementById('order-count-badge').textContent = `${orders.length} sipariş · ${totalAdet} adet`;
+
   if (!orders.length) {
     div.innerHTML = '<div class="empty"><div class="empty-icon">📭</div><p>Henüz sipariş eklenmedi</p></div>';
     document.getElementById('orders-summary').style.display = 'none';
     return;
   }
+
   const grouped = {};
-  orders.forEach((o,i)=>{ if(!grouped[o.musteri])grouped[o.musteri]=[]; grouped[o.musteri].push({...o,_idx:i}); });
-  let html = '';
-  Object.entries(grouped).forEach(([musteri, items]) => {
-    const musteriToplam = items.reduce((s,o)=>s+(o.toplamMOMS||o.netFiyat||0), 0);
-    html += `<div style="margin-bottom:14px">
-      <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 4px;border-bottom:2px solid var(--accent);margin-bottom:6px">
-        <span style="font-size:13px;font-weight:800">👤 ${musteri}</span>
-        <span style="font-size:12px;font-weight:700;color:var(--accent)">${musteriToplam.toFixed(2)} kr</span>
-      </div>
-      ${items.map(o => {
-        const d = o.durum||'bekliyor';
-        const dot = d==='bitti'?'🟢':d==='yapiliyor'?'🔵':'🟡';
-        const bgColor = d==='bitti'?'#16a34a':d==='yapiliyor'?'#2563eb':'#d97706';
-        return `<div class="order-item ${selectedOrder===o._idx?'active-order':''}" onclick="selectOrder(${o._idx})" style="margin-left:8px">
-          <div class="order-num" style="width:26px;height:26px;font-size:11px;background:${bgColor}">${o._idx+1}</div>
-          <div class="order-info">
-            <h4>${dot} ${o.oda||'—'}</h4>
-            <p>${o.en}×${o.boy}mm · ${getTypeName(o)} · ${o.adet} ad.</p>
-            <p style="color:var(--accent);font-weight:700">${(o.toplamMOMS||o.netFiyat||0).toFixed(2)} kr</p>
-          </div>
-          <button class="order-delete" onclick="deleteOrder(event,${o._idx})">✕</button>
-        </div>`;
-      }).join('')}
-    </div>`;
+  orders.forEach((o,i) => {
+    if (!grouped[o.musteri]) grouped[o.musteri] = { orders:[], toplam:0, adet:0, bitti:0 };
+    grouped[o.musteri].orders.push({...o, _idx:i});
+    grouped[o.musteri].toplam += (o.toplamMOMS||o.netFiyat||0);
+    grouped[o.musteri].adet += (parseInt(o.adet)||1);
+    if (o.durum==='bitti') grouped[o.musteri].bitti++;
   });
-  div.innerHTML = html;
+
+  div.innerHTML = Object.entries(grouped).map(([musteri, g]) => {
+    const mus = musteri.replace(/'/g,"\\'");
+    const durumTxt = g.bitti===g.orders.length ? '✅ Tümü bitti' : g.bitti>0 ? `${g.bitti}/${g.orders.length} bitti` : '⏳ Devam ediyor';
+    return `<div class="customer-card" onclick="showCustomerOrders('${mus}')">
+      <div class="customer-card-avatar">👤</div>
+      <div class="customer-card-info">
+        <h3>${musteri}</h3>
+        <p>${g.orders.length} sipariş · ${g.adet} adet &nbsp;·&nbsp; ${durumTxt}</p>
+      </div>
+      <div class="customer-card-right">
+        <div class="customer-card-price">${g.toplam.toFixed(2)} kr</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px">inkl. MOMS</div>
+      </div>
+      <div class="customer-card-arrow">›</div>
+    </div>`;
+  }).join('');
+
   renderSummary();
   updateMusteriList();
 }
 
+function showCustomerOrders(musteri) {
+  currentCustomer = musteri;
+  selectedOrder = null;
+  document.getElementById('customer-list-view').style.display = 'none';
+  document.getElementById('customer-orders-view').style.display = 'block';
+  document.getElementById('orders-back-btn').style.display = '';
+  document.getElementById('orders-title').textContent = musteri;
+  document.getElementById('order-detail-div').innerHTML = '';
+  renderCustomerOrders();
+}
+
+function renderCustomerOrders() {
+  const musOrders = orders.map((o,i)=>({...o,_idx:i})).filter(o=>o.musteri===currentCustomer);
+  const toplam = musOrders.reduce((s,o)=>s+(o.toplamMOMS||o.netFiyat||0),0);
+  const totalAdet = musOrders.reduce((s,o)=>s+(parseInt(o.adet)||1),0);
+  document.getElementById('order-count-badge').textContent = `${musOrders.length} sipariş · ${totalAdet} adet`;
+  document.getElementById('customer-total-bar').innerHTML = `
+    <div><h3>TOPLAM (inkl. MOMS)</h3><div class="big">${toplam.toFixed(2)} kr</div></div>
+    <div style="text-align:right;font-size:13px;color:rgba(255,255,255,.5)">${musOrders.length} sipariş<br>${totalAdet} adet</div>`;
+
+  const div = document.getElementById('order-list-div');
+  if (!musOrders.length) {
+    div.innerHTML = '<div class="empty"><div class="empty-icon">📭</div><p>Sipariş yok</p></div>';
+    return;
+  }
+  div.innerHTML = musOrders.map(o => {
+    const d = o.durum||'bekliyor';
+    const dot = d==='bitti'?'🟢':d==='yapiliyor'?'🔵':'🟡';
+    const bgColor = d==='bitti'?'#16a34a':d==='yapiliyor'?'#2563eb':'#d97706';
+    return `<div class="order-item ${selectedOrder===o._idx?'active-order':''}" onclick="selectOrder(${o._idx})">
+      <div class="order-num" style="background:${bgColor}">${o._idx+1}</div>
+      <div class="order-info">
+        <h4>${dot} ${o.oda||'—'}</h4>
+        <p>${o.en}×${o.boy}mm · ${getTypeName(o)} · ${o.adet} ad.</p>
+        <p style="color:var(--accent);font-weight:700">${(o.toplamMOMS||o.netFiyat||0).toFixed(2)} kr</p>
+      </div>
+      <button class="order-delete" onclick="deleteOrder(event,${o._idx})">✕</button>
+    </div>`;
+  }).join('');
+}
+
 function selectOrder(i) {
   selectedOrder = i;
-  renderOrderList();
+  if (currentCustomer) renderCustomerOrders(); else showCustomerList();
   const o = orders[i];
   const det = document.getElementById('order-detail-div');
   const durum = o.durum||'bekliyor';
@@ -908,8 +975,13 @@ function deleteOrder(e, i) {
   orders.splice(i,1); orders.forEach((o,idx)=>o.no=idx+1);
   saveToFirestore();
   selectedOrder = null;
-  document.getElementById('order-detail-div').innerHTML = '<div class="empty card" style="padding:40px"><div class="empty-icon">👈</div><p>Soldaki listeden bir sipariş seçin</p></div>';
-  renderOrderList();
+  document.getElementById('order-detail-div').innerHTML = '';
+  // If in customer view and no more orders for this customer, go back
+  if (currentCustomer && !orders.some(o=>o.musteri===currentCustomer)) {
+    showCustomerList();
+  } else {
+    renderOrderList();
+  }
 }
 
 function clearOrders() {
@@ -942,7 +1014,7 @@ function renderSummary() {
 function setDurum(idx, durum) {
   orders[idx].durum = durum;
   saveToFirestore();
-  renderOrderList(); selectOrder(idx);
+  selectOrder(idx);
 }
 
 // ─── PDF ──────────────────────────────────────────────────────────────────────
