@@ -56,6 +56,12 @@
     --text: #1e293b; --muted: #64748b; --border: #e2e8f0;
     --red: #dc2626; --amber: #d97706; --blue: #2563eb; --green: #16a34a;
   }
+  /* TOAST BİLDİRİM */
+  #toast-container { position:fixed; top:20px; left:50%; transform:translateX(-50%); z-index:99999; pointer-events:none; display:flex; flex-direction:column; align-items:center; gap:8px; }
+  .toast { background:#1e293b; color:#fff; padding:12px 22px; border-radius:12px; font-size:14px; font-weight:600; box-shadow:0 8px 24px rgba(0,0,0,.35); opacity:0; transform:translateY(-12px); transition:all .25s ease; pointer-events:none; white-space:nowrap; border-left:4px solid #16a34a; max-width:320px; text-align:center; }
+  .toast.show { opacity:1; transform:translateY(0); }
+  .toast.toast-error { border-left-color:#dc2626; }
+  .toast.toast-warn { border-left-color:#d97706; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
   .app { display: flex; min-height: 100vh; }
@@ -239,6 +245,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
+<div id="toast-container"></div>
 <div class="app">
 
 <!-- SIDEBAR -->
@@ -815,12 +822,30 @@ function getOrderTypeClass(o) {
   return 'plise';
 }
 
+function showToast(msg, type) {
+  const container = document.getElementById('toast-container');
+  const t = document.createElement('div');
+  t.className = 'toast' + (type==='error'?' toast-error':type==='warn'?' toast-warn':'');
+  t.textContent = msg;
+  container.appendChild(t);
+  requestAnimationFrame(()=>{ t.classList.add('show'); });
+  setTimeout(()=>{ t.classList.remove('show'); setTimeout(()=>t.remove(), 300); }, 3000);
+}
+
 function saveOrder() {
-  if (!window._calcData) return;
+  if (!window._calcData) {
+    showToast('⚠️ Önce EN ve BOY girerek hesap yapın!', 'warn');
+    document.getElementById('inp-en').focus();
+    return;
+  }
   const d = window._calcData;
   const enteredMusteri = document.getElementById('inp-musteri').value.trim();
   const oda = document.getElementById('inp-oda').value.trim() || '—';
-  if (!enteredMusteri) { alert('Lütfen müşteri adı girin!'); document.getElementById('inp-musteri').focus(); return; }
+  if (!enteredMusteri) {
+    showToast('⚠️ Müşteri adı giriniz!', 'warn');
+    document.getElementById('inp-musteri').focus();
+    return;
+  }
   // Match existing customer case-insensitively so "sinan" → "Sinan" if already exists
   const existing = orders.find(o => o.musteri.toLowerCase() === enteredMusteri.toLowerCase());
   const musteri = existing ? existing.musteri : enteredMusteri;
@@ -828,7 +853,7 @@ function saveOrder() {
   orders.push(order);
   saveToFirestore();
   updateMusteriList();
-  alert(`✅ ${musteri} – ${oda} kaydedildi!`);
+  showToast(`✅ ${musteri} – ${oda} kaydedildi!`);
   renderOrderList();
 }
 
@@ -1059,7 +1084,7 @@ function setDurum(idx, durum) {
 
 function pdfMusteriSec() {
   const musteriler = [...new Set(orders.map(o=>o.musteri))];
-  if (!musteriler.length) { alert('Henüz sipariş yok.'); return; }
+  if (!musteriler.length) { showToast('Henüz sipariş yok.', 'warn'); return; }
   if (musteriler.length===1) { generatePDF(musteriler[0]); return; }
   const sec = prompt('PDF için müşteri seçin:\n'+musteriler.map((m,i)=>`${i+1}. ${m}`).join('\n')+'\n\nNumara girin:');
   if (!sec) return;
