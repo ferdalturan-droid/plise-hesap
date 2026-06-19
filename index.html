@@ -127,9 +127,19 @@
   .empty .empty-icon { font-size: 40px; margin-bottom: 10px; }
   .empty p { font-size: 14px; }
   .order-list { max-height: 350px; overflow-y: auto; }
-  .order-item { display: flex; align-items: center; gap: 12px; padding: 12px; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 8px; cursor: pointer; transition: .15s; }
-  .order-item:hover { border-color: var(--accent); background: #f0fdf4; }
-  .order-item.active-order { border-color: var(--accent); background: #f0fdf4; }
+  .order-item { display: flex; align-items: center; gap: 12px; padding: 12px; border: 1px solid var(--border); border-left: 4px solid var(--border); border-radius: 10px; margin-bottom: 8px; cursor: pointer; transition: .15s; }
+  .order-item:hover { background: #f8fafc; }
+  .order-item.active-order { background: #f0fdf4; }
+  .order-item.type-plise { border-left-color: #2563eb; }
+  .order-item.type-duble { border-left-color: #d97706; }
+  .order-item.type-sineklik { border-left-color: #0d9488; }
+  .order-item.type-perde { border-left-color: #7c3aed; }
+  .type-chips { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:14px; }
+  .type-chip { display:flex; align-items:center; gap:5px; padding:6px 12px; border-radius:20px; font-size:12px; font-weight:700; }
+  .type-chip.plise { background:#eff6ff; color:#1d4ed8; }
+  .type-chip.duble { background:#fffbeb; color:#b45309; }
+  .type-chip.sineklik { background:#f0fdfa; color:#0d9488; }
+  .type-chip.perde { background:#faf5ff; color:#7c3aed; }
   .order-num { width: 32px; height: 32px; background: var(--accent); color: white; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; flex-shrink: 0; }
   .order-info h4 { font-size: 13px; font-weight: 700; }
   .order-info p { font-size: 11px; color: var(--muted); margin-top: 1px; }
@@ -797,6 +807,14 @@ function getTypeClass(o) {
   return '';
 }
 
+function getOrderTypeClass(o) {
+  if (!o.type) return 'plise';
+  if (o.type==='duble') return 'duble';
+  if (o.type.startsWith('sineklik')) return 'sineklik';
+  if (o.type.startsWith('perde')) return 'perde';
+  return 'plise';
+}
+
 function saveOrder() {
   if (!window._calcData) return;
   const d = window._calcData;
@@ -887,6 +905,17 @@ function renderCustomerOrders() {
   const toplam = musOrders.reduce((s,o)=>s+(o.toplamMOMS||o.netFiyat||0),0);
   const totalAdet = musOrders.reduce((s,o)=>s+(parseInt(o.adet)||1),0);
   document.getElementById('order-count-badge').textContent = `${musOrders.length} sipariş · ${totalAdet} adet`;
+
+  // Type breakdown counts
+  const typeCounts = { plise:0, duble:0, sineklik:0, perde:0 };
+  musOrders.forEach(o => { typeCounts[getOrderTypeClass(o)]++; });
+  const chips = [
+    typeCounts.plise   && `<div class="type-chip plise">🔵 ${typeCounts.plise}× Plise 2.8</div>`,
+    typeCounts.duble   && `<div class="type-chip duble">🟠 ${typeCounts.duble}× Duble 2.8</div>`,
+    typeCounts.sineklik&& `<div class="type-chip sineklik">🟢 ${typeCounts.sineklik}× Sineklik 1.9</div>`,
+    typeCounts.perde   && `<div class="type-chip perde">🟣 ${typeCounts.perde}× Perde</div>`,
+  ].filter(Boolean).join('');
+
   document.getElementById('customer-total-bar').innerHTML = `
     <div><h3>TOPLAM (inkl. MOMS)</h3><div class="big">${toplam.toFixed(2)} kr</div></div>
     <div style="text-align:right;font-size:13px;color:rgba(255,255,255,.5)">${musOrders.length} sipariş<br>${totalAdet} adet</div>`;
@@ -896,16 +925,22 @@ function renderCustomerOrders() {
     div.innerHTML = '<div class="empty"><div class="empty-icon">📭</div><p>Sipariş yok</p></div>';
     return;
   }
-  div.innerHTML = musOrders.map(o => {
+
+  div.innerHTML = `<div class="type-chips">${chips}</div>` + musOrders.map(o => {
     const d = o.durum||'bekliyor';
-    const dot = d==='bitti'?'🟢':d==='yapiliyor'?'🔵':'🟡';
+    const dot = d==='bitti'?'✅':d==='yapiliyor'?'🔧':'⏳';
     const bgColor = d==='bitti'?'#16a34a':d==='yapiliyor'?'#2563eb':'#d97706';
-    return `<div class="order-item ${selectedOrder===o._idx?'active-order':''}" onclick="selectOrder(${o._idx})">
-      <div class="order-num" style="background:${bgColor}">${o._idx+1}</div>
-      <div class="order-info">
-        <h4>${dot} ${o.oda||'—'}</h4>
-        <p>${o.en}×${o.boy}mm · ${getTypeName(o)} · ${o.adet} ad.</p>
-        <p style="color:var(--accent);font-weight:700">${(o.toplamMOMS||o.netFiyat||0).toFixed(2)} kr</p>
+    const tc = getOrderTypeClass(o);
+    const badgeLabel = { plise:'Plise 2.8', duble:'Duble 2.8', sineklik:'Sineklik 1.9', perde:'Perde' }[tc];
+    return `<div class="order-item type-${tc} ${selectedOrder===o._idx?'active-order':''}" onclick="selectOrder(${o._idx})">
+      <div class="order-num" style="background:${bgColor};width:26px;height:26px;font-size:11px">${o._idx+1}</div>
+      <div class="order-info" style="flex:1">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">
+          <h4 style="margin:0">${o.oda||'—'}</h4>
+          <span class="badge ${tc==='sineklik'?'badge-teal':tc==='perde'?'badge-purple':tc==='duble'?'badge-amber':'badge-blue'}" style="font-size:10px;padding:1px 7px">${badgeLabel}</span>
+        </div>
+        <p>${o.en}×${o.boy}mm · ${o.adet} ad. · ${dot} ${d}</p>
+        <p style="color:var(--accent);font-weight:700;margin-top:2px">${(o.toplamMOMS||o.netFiyat||0).toFixed(2)} kr</p>
       </div>
       <button class="order-delete" onclick="deleteOrder(event,${o._idx})">✕</button>
     </div>`;
