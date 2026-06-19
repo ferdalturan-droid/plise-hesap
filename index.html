@@ -194,6 +194,19 @@
   .mobile-nav-btn .mnav-icon { font-size: 20px; }
   .mobile-nav-btn.active { color: #4ade80; }
 
+  /* ── NUMERIC KEYPAD ── */
+  #numpad-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:99998;align-items:flex-end;justify-content:center;}
+  #numpad-panel{background:#1e293b;border-radius:20px 20px 0 0;padding:20px 20px max(36px,env(safe-area-inset-bottom));width:100%;max-width:440px;}
+  #numpad-lbl{color:rgba(255,255,255,.4);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px;}
+  #numpad-disp{background:#0f172a;border-radius:12px;padding:14px 20px;font-size:44px;font-weight:800;color:#fff;text-align:right;margin-bottom:14px;min-height:76px;letter-spacing:1px;}
+  #numpad-disp.np-empty{color:rgba(255,255,255,.2);font-size:28px;}
+  .npbtn{width:100%;height:70px;background:rgba(255,255,255,.1);border:none;border-radius:14px;font-size:28px;font-weight:700;color:#fff;cursor:pointer;transition:.08s;-webkit-tap-highlight-color:transparent;}
+  .npbtn:active{background:rgba(255,255,255,.28);transform:scale(.93);}
+  .np-red{background:rgba(220,38,38,.22);color:#fca5a5;}
+  .np-amber{background:rgba(217,119,6,.22);color:#fcd34d;}
+  .numpad-inp{cursor:pointer!important;caret-color:transparent;user-select:none;-webkit-user-select:none;}
+  .numpad-inp::placeholder{color:var(--accent);font-weight:600;font-size:13px;}
+
   @media (max-width: 640px) {
     .sidebar { display: none; }
     .mobile-nav { display: flex; }
@@ -269,15 +282,15 @@
       <div class="form-grid">
         <div class="form-group">
           <label id="lbl-en">EN (mm) *</label>
-          <input type="number" id="inp-en" placeholder="örn. 1000" oninput="calc()" min="50" max="5000">
+          <input type="text" inputmode="none" id="inp-en" placeholder="👆 Dokun" class="numpad-inp" onclick="openNumpad(this, document.getElementById('lbl-en').textContent)" readonly>
         </div>
         <div class="form-group">
           <label id="lbl-boy">BOY (mm) *</label>
-          <input type="number" id="inp-boy" placeholder="örn. 1200" oninput="calc()" min="50" max="5000">
+          <input type="text" inputmode="none" id="inp-boy" placeholder="👆 Dokun" class="numpad-inp" onclick="openNumpad(this, document.getElementById('lbl-boy').textContent)" readonly>
         </div>
         <div class="form-group">
           <label>ADET</label>
-          <input type="number" id="inp-adet" value="1" min="1" max="100" oninput="calc()">
+          <input type="text" inputmode="none" id="inp-adet" value="1" class="numpad-inp" onclick="openNumpad(this,'ADET')" readonly>
         </div>
         <div class="form-group" id="fg-alu">
           <label>ALÜMİNYUM TÜRÜ</label>
@@ -304,7 +317,7 @@
         </div>
         <div class="form-group">
           <label>M² FİYATI (kr)</label>
-          <input type="number" id="inp-m2fiyat" value="480" min="1" oninput="calc()">
+          <input type="text" inputmode="none" id="inp-m2fiyat" value="480" class="numpad-inp" onclick="openNumpad(this,'M² Fiyatı (kr)')" readonly>
         </div>
         <div class="form-group" style="display:none">
           <label>İSKONTO (%)</label>
@@ -1062,6 +1075,62 @@ function clearForm() {
   window._calcData=null;
 }
 
+// ─── NUMERIC KEYPAD ──────────────────────────────────────────────────────────
+let _npTarget = null, _npVal = '';
+
+function openNumpad(el, label) {
+  _npTarget = el;
+  _npVal = el.value || '';
+  document.getElementById('numpad-lbl').textContent = label;
+  const disp = document.getElementById('numpad-disp');
+  disp.textContent = _npVal || 'Rakam girin';
+  disp.className = _npVal ? '' : 'np-empty';
+  document.getElementById('numpad-overlay').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+
+function closeNumpad(e) {
+  if (e && e.target !== document.getElementById('numpad-overlay')) return;
+  _closeNp();
+}
+
+function _closeNp() {
+  document.getElementById('numpad-overlay').style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+function np(d) {
+  const isAdet = _npTarget && _npTarget.id === 'inp-adet';
+  const maxLen = isAdet ? 3 : 5;
+  if (_npVal.length >= maxLen) return;
+  _npVal += d;
+  const disp = document.getElementById('numpad-disp');
+  disp.textContent = _npVal;
+  disp.className = '';
+}
+
+function npBack() {
+  _npVal = _npVal.slice(0, -1);
+  const disp = document.getElementById('numpad-disp');
+  disp.textContent = _npVal || 'Rakam girin';
+  disp.className = _npVal ? '' : 'np-empty';
+}
+
+function npClear() {
+  _npVal = '';
+  const disp = document.getElementById('numpad-disp');
+  disp.textContent = 'Rakam girin';
+  disp.className = 'np-empty';
+}
+
+function npOK() {
+  if (_npTarget && _npVal) {
+    _npTarget.value = _npVal;
+    calc();
+  }
+  _closeNp();
+}
+
 // ─── PWA MANIFEST ────────────────────────────────────────────────────────────
 (function() {
   const manifest = {
@@ -1091,5 +1160,29 @@ function clearForm() {
 document.getElementById('ahsap-opt').style.display='none';
 renderOrderList();
 </script>
+
+<!-- NUMERIC KEYPAD OVERLAY -->
+<div id="numpad-overlay" onclick="closeNumpad(event)">
+  <div id="numpad-panel">
+    <div id="numpad-lbl"></div>
+    <div id="numpad-disp" class="np-empty">Rakam girin</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:10px;">
+      <button class="npbtn" onclick="np('7')">7</button>
+      <button class="npbtn" onclick="np('8')">8</button>
+      <button class="npbtn" onclick="np('9')">9</button>
+      <button class="npbtn" onclick="np('4')">4</button>
+      <button class="npbtn" onclick="np('5')">5</button>
+      <button class="npbtn" onclick="np('6')">6</button>
+      <button class="npbtn" onclick="np('1')">1</button>
+      <button class="npbtn" onclick="np('2')">2</button>
+      <button class="npbtn" onclick="np('3')">3</button>
+      <button class="npbtn np-red" onclick="npClear()">C</button>
+      <button class="npbtn" onclick="np('0')">0</button>
+      <button class="npbtn np-amber" onclick="npBack()">⌫</button>
+    </div>
+    <button onclick="npOK()" style="width:100%;height:62px;background:#16a34a;color:#fff;border:none;border-radius:14px;font-size:20px;font-weight:800;cursor:pointer;-webkit-tap-highlight-color:transparent;">✓ Tamam</button>
+  </div>
+</div>
+
 </body>
 </html>
