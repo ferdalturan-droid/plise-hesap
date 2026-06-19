@@ -818,9 +818,12 @@ function getOrderTypeClass(o) {
 function saveOrder() {
   if (!window._calcData) return;
   const d = window._calcData;
-  const musteri = document.getElementById('inp-musteri').value.trim();
+  const enteredMusteri = document.getElementById('inp-musteri').value.trim();
   const oda = document.getElementById('inp-oda').value.trim() || '—';
-  if (!musteri) { alert('Lütfen müşteri adı girin!'); document.getElementById('inp-musteri').focus(); return; }
+  if (!enteredMusteri) { alert('Lütfen müşteri adı girin!'); document.getElementById('inp-musteri').focus(); return; }
+  // Match existing customer case-insensitively so "sinan" → "Sinan" if already exists
+  const existing = orders.find(o => o.musteri.toLowerCase() === enteredMusteri.toLowerCase());
+  const musteri = existing ? existing.musteri : enteredMusteri;
   const order = { id: Date.now(), no: orders.length+1, musteri, oda, tarih: new Date().toLocaleDateString('tr-TR'), ...d };
   orders.push(order);
   saveToFirestore();
