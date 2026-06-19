@@ -1,0 +1,1029 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Üretim Hesaplayıcı</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="PliseHesap">
+<meta name="theme-color" content="#0f172a">
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%230f172a'/><text y='.9em' font-size='70' x='15'>🪟</text></svg>">
+<style>
+  :root {
+    --bg: #f0f4f8; --sidebar: #0f172a; --card: #ffffff;
+    --accent: #16a34a; --accent2: #15803d;
+    --text: #1e293b; --muted: #64748b; --border: #e2e8f0;
+    --red: #dc2626; --amber: #d97706; --blue: #2563eb; --green: #16a34a;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+  .app { display: flex; min-height: 100vh; }
+  .sidebar { width: 220px; background: var(--sidebar); color: #fff; display: flex; flex-direction: column; flex-shrink: 0; position: sticky; top: 0; height: 100vh; }
+  .sidebar-logo { padding: 20px 18px; border-bottom: 1px solid rgba(255,255,255,.07); }
+  .sidebar-logo .icon { font-size: 22px; }
+  .sidebar-logo h1 { font-size: 15px; font-weight: 700; color: #fff; margin-top: 6px; }
+  .sidebar-logo p { font-size: 10px; color: rgba(255,255,255,.3); margin-top: 2px; }
+  .nav { padding: 12px 10px; flex: 1; }
+  .nav-section { font-size: 10px; color: rgba(255,255,255,.25); padding: 10px 8px 4px; letter-spacing: .05em; text-transform: uppercase; }
+  .nav-btn { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px; cursor: pointer; color: rgba(255,255,255,.45); font-size: 13px; font-weight: 500; transition: .15s; border: none; background: none; width: 100%; text-align: left; }
+  .nav-btn:hover { background: rgba(255,255,255,.06); color: rgba(255,255,255,.8); }
+  .nav-btn.active { background: rgba(34,197,94,.15); color: #4ade80; }
+  .nav-btn .nav-icon { font-size: 15px; width: 20px; text-align: center; }
+  .main { flex: 1; display: flex; flex-direction: column; overflow: auto; }
+  .topbar { background: white; border-bottom: 1px solid var(--border); padding: 0 24px; height: 56px; display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 10; }
+  .topbar h2 { font-size: 16px; font-weight: 700; flex: 1; }
+  .content { padding: 24px; flex: 1; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 16px; }
+  .card-title { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 14px; }
+
+  /* PRODUCT TYPE SELECTOR */
+  .product-tabs { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
+  .product-btn { flex: 1; min-width: 80px; padding: 10px 6px; border: 2px solid var(--border); border-radius: 10px; cursor: pointer; font-size: 12px; font-weight: 700; background: white; color: var(--muted); transition: .15s; text-align: center; }
+  .product-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .product-btn.active { border-color: var(--accent); background: #f0fdf4; color: var(--accent); }
+  .product-btn .pb-icon { font-size: 18px; display: block; margin-bottom: 3px; }
+
+  /* SUB TABS */
+  .tabs { display: flex; gap: 4px; background: var(--bg); border-radius: 10px; padding: 4px; margin-bottom: 20px; }
+  .tab-btn { flex: 1; padding: 9px; border: none; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; background: transparent; color: var(--muted); transition: .15s; }
+  .tab-btn.active { background: white; color: var(--text); box-shadow: 0 1px 4px rgba(0,0,0,.1); }
+
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .form-group label { font-size: 11px; font-weight: 600; color: var(--muted); display: block; margin-bottom: 5px; }
+  .form-group input, .form-group select { width: 100%; padding: 10px 12px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 14px; color: var(--text); background: white; outline: none; transition: border-color .15s; }
+  .form-group input:focus, .form-group select:focus { border-color: var(--accent); }
+  .form-group.full { grid-column: 1 / -1; }
+  .btn { padding: 10px 20px; border: none; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; transition: .15s; }
+  .btn-green { background: var(--accent); color: white; }
+  .btn-green:hover { background: var(--accent2); }
+  .btn-gray { background: var(--bg); color: var(--text); border: 1px solid var(--border); }
+  .btn-gray:hover { background: var(--border); }
+  .btn-print { background: #1d4ed8; color: white; }
+  .results-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
+  .result-item { background: var(--bg); border-radius: 10px; padding: 12px 14px; border-left: 3px solid var(--accent); }
+  .result-item.blue { border-left-color: var(--blue); }
+  .result-item.amber { border-left-color: var(--amber); }
+  .result-item.red { border-left-color: var(--red); }
+  .result-label { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; margin-bottom: 4px; }
+  .result-value { font-size: 20px; font-weight: 800; color: var(--text); }
+  .result-unit { font-size: 11px; color: var(--muted); margin-left: 2px; }
+  .result-sub { font-size: 10px; color: var(--muted); margin-top: 2px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { background: #f8fafc; color: var(--muted); font-size: 11px; font-weight: 700; text-transform: uppercase; padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border); }
+  td { padding: 10px 12px; border-bottom: 1px solid #f8fafc; color: var(--text); }
+  tr:hover td { background: #f8fafc; }
+  .td-num { font-weight: 700; font-size: 15px; color: var(--text); }
+  .price-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .price-row:last-child { border: none; }
+  .price-total { font-size: 18px; font-weight: 800; color: var(--accent); }
+  .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+  .badge-green { background: #f0fdf4; color: #15803d; }
+  .badge-blue { background: #eff6ff; color: #1d4ed8; }
+  .badge-amber { background: #fffbeb; color: #b45309; }
+  .badge-purple { background: #faf5ff; color: #7c3aed; }
+  .badge-teal { background: #f0fdfa; color: #0d9488; }
+  .empty { text-align: center; padding: 40px 20px; color: var(--muted); }
+  .empty .empty-icon { font-size: 40px; margin-bottom: 10px; }
+  .empty p { font-size: 14px; }
+  .order-list { max-height: 350px; overflow-y: auto; }
+  .order-item { display: flex; align-items: center; gap: 12px; padding: 12px; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 8px; cursor: pointer; transition: .15s; }
+  .order-item:hover { border-color: var(--accent); background: #f0fdf4; }
+  .order-item.active-order { border-color: var(--accent); background: #f0fdf4; }
+  .order-num { width: 32px; height: 32px; background: var(--accent); color: white; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; flex-shrink: 0; }
+  .order-info h4 { font-size: 13px; font-weight: 700; }
+  .order-info p { font-size: 11px; color: var(--muted); margin-top: 1px; }
+  .order-delete { margin-left: auto; background: none; border: none; color: #dc2626; cursor: pointer; font-size: 16px; padding: 4px; border-radius: 6px; opacity: 0; transition: .15s; }
+  .order-item:hover .order-delete { opacity: 1; }
+  .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+  .section-header h3 { font-size: 14px; font-weight: 700; }
+  .status-bekliyor { background:#fffbeb; color:#b45309; border:1px solid #fde68a; padding:3px 12px; border-radius:20px; font-size:11px; font-weight:700; }
+  .status-yapiliyor { background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; padding:3px 12px; border-radius:20px; font-size:11px; font-weight:700; }
+  .status-bitti { background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0; padding:3px 12px; border-radius:20px; font-size:11px; font-weight:700; }
+  .btn-bitti { background:#f0fdf4; color:#15803d; border:2px solid #16a34a; padding:8px 18px; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer; transition:.15s; }
+  .btn-bitti:hover { background:#16a34a; color:white; }
+  .btn-yapiliyor { background:#eff6ff; color:#1d4ed8; border:2px solid #2563eb; padding:8px 18px; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer; transition:.15s; }
+  .btn-pdf-musteri { background:#7c3aed; color:white; border:none; padding:8px 18px; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer; }
+  .btn-pdf-musteri:hover { background:#6d28d9; }
+
+  /* PDF */
+  @media print {
+    .app { display: none !important; }
+    body { background: white; }
+    #pdf-overlay { display: block !important; position: static !important; padding: 0 !important; }
+    .pdf-close-btn, .pdf-print-btn { display: none !important; }
+    @page { size: A4; margin: 1.2cm 1.4cm; }
+  }
+  #pdf-overlay { display: none; position: fixed; inset: 0; background: white; z-index: 9999; overflow: auto; padding: 24px 32px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; }
+  .pdf-header { display:flex; justify-content:space-between; align-items:flex-start; padding-bottom:12px; border-bottom:3px solid #0f172a; margin-bottom:16px; }
+  .pdf-logo { font-size:22px; font-weight:900; color:#0f172a; }
+  .pdf-logo span { color:#16a34a; }
+  .pdf-meta { text-align:right; font-size:12px; color:#64748b; }
+  .pdf-customer-bar { background:#0f172a; color:white; padding:10px 16px; border-radius:8px; display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; }
+  .pdf-customer-bar h2 { font-size:16px; font-weight:800; }
+  .pdf-customer-bar p { font-size:12px; color:rgba(255,255,255,.6); margin-top:2px; }
+  .pdf-table { width:100%; border-collapse:collapse; font-size:12px; margin-bottom:20px; }
+  .pdf-table th { background:#f1f5f9; color:#475569; font-size:10px; font-weight:700; text-transform:uppercase; padding:8px 10px; text-align:left; border-bottom:2px solid #e2e8f0; }
+  .pdf-table td { padding:9px 10px; border-bottom:1px solid #f1f5f9; color:#1e293b; vertical-align:top; }
+  .pdf-table tr:nth-child(even) td { background:#fafbfc; }
+  .pdf-table .td-oda { font-weight:700; font-size:13px; }
+  .pdf-table .td-type { font-size:10px; background:#eff6ff; color:#1d4ed8; padding:2px 8px; border-radius:12px; white-space:nowrap; display:inline-block; }
+  .pdf-table .td-type.sineklik { background:#f0fdf4; color:#15803d; }
+  .pdf-table .td-type.perde { background:#faf5ff; color:#7c3aed; }
+  .pdf-table .td-price { font-weight:700; color:#0f172a; font-size:13px; text-align:right; }
+  .pdf-price-box { background:#0f172a; color:white; border-radius:10px; padding:16px 20px; margin-top:4px; }
+  .pdf-price-row { display:flex; justify-content:space-between; font-size:13px; padding:4px 0; color:rgba(255,255,255,.7); }
+  .pdf-price-total { display:flex; justify-content:space-between; font-size:18px; font-weight:900; color:#4ade80; padding-top:10px; margin-top:8px; border-top:1px solid rgba(255,255,255,.2); }
+  .pdf-close-btn { position:fixed; top:16px; right:16px; background:#dc2626; color:white; border:none; border-radius:8px; padding:8px 18px; cursor:pointer; font-weight:700; font-size:13px; z-index:10000; }
+  .pdf-print-btn { position:fixed; top:16px; right:120px; background:#16a34a; color:white; border:none; border-radius:8px; padding:8px 18px; cursor:pointer; font-weight:700; font-size:13px; z-index:10000; }
+  .pdf-footer-note { text-align:center; font-size:10px; color:#94a3b8; margin-top:16px; }
+
+  /* MOBILE BOTTOM NAV */
+  .mobile-nav {
+    display: none;
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: var(--sidebar); border-top: 1px solid rgba(255,255,255,.1);
+    padding: 8px 0 max(8px, env(safe-area-inset-bottom)); z-index: 100;
+    flex-direction: row;
+  }
+  .mobile-nav-btn {
+    flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
+    background: none; border: none; color: rgba(255,255,255,.4); font-size: 10px;
+    font-weight: 600; cursor: pointer; padding: 6px 4px; transition: .15s;
+  }
+  .mobile-nav-btn .mnav-icon { font-size: 20px; }
+  .mobile-nav-btn.active { color: #4ade80; }
+
+  @media (max-width: 640px) {
+    .sidebar { display: none; }
+    .mobile-nav { display: flex; }
+    .content { padding: 16px 14px 90px; }
+    .form-grid { grid-template-columns: 1fr; }
+    .results-grid { grid-template-columns: 1fr 1fr; }
+    .product-tabs { gap: 4px; }
+    .product-btn { font-size: 11px; padding: 8px 4px; }
+    .product-btn .pb-icon { font-size: 16px; }
+    #page-orders .content > div { grid-template-columns: 1fr !important; }
+    .topbar { padding: 0 14px; }
+    .topbar h2 { font-size: 14px; }
+    .btn { padding: 8px 12px; font-size: 12px; }
+    .form-group input, .form-group select { font-size: 16px; } /* prevents zoom on iOS */
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="sidebar-logo">
+    <div class="icon">🪟</div>
+    <h1>Üretim Hesap</h1>
+    <p>Plise · Sineklik · Perde</p>
+  </div>
+  <nav class="nav">
+    <div class="nav-section">Hesaplama</div>
+    <button class="nav-btn active" onclick="showPage('calc')" id="nav-calc"><span class="nav-icon">📐</span> Hesaplayıcı</button>
+    <button class="nav-btn" onclick="showPage('orders')" id="nav-orders"><span class="nav-icon">📋</span> Siparişler</button>
+    <div class="nav-section">Bilgi</div>
+    <button class="nav-btn" onclick="showPage('prices')" id="nav-prices"><span class="nav-icon">💰</span> Fiyatlar</button>
+  </nav>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+<!-- HESAPLAYICI PAGE -->
+<div id="page-calc">
+  <div class="topbar">
+    <h2 id="calc-topbar-title">Hesaplayıcı</h2>
+    <button class="btn btn-gray no-print" onclick="clearForm()">Temizle</button>
+    <button class="btn btn-print no-print" onclick="window.print()">🖨️ Yazdır</button>
+  </div>
+  <div class="content">
+
+    <!-- ÜRÜN TİPİ -->
+    <div class="product-tabs no-print" id="product-tabs">
+      <button class="product-btn active" id="pb-plise" onclick="setProduct('plise')">
+        <span class="pb-icon">🪟</span>PLİSE 2.8
+      </button>
+      <button class="product-btn" id="pb-sineklik" onclick="setProduct('sineklik')">
+        <span class="pb-icon">🕸️</span>SİNEKLİK 1.9
+      </button>
+      <button class="product-btn" id="pb-perde" onclick="setProduct('perde')">
+        <span class="pb-icon">🪜</span>PERDE
+      </button>
+    </div>
+
+    <!-- ALT TİP SEKMELER -->
+    <div class="tabs no-print" id="subtype-tabs">
+      <button class="tab-btn active" id="tab-sub0" onclick="setSubtype(0)">Tekli</button>
+      <button class="tab-btn" id="tab-sub1" onclick="setSubtype(1)">Duble</button>
+    </div>
+
+    <!-- GİRİŞ -->
+    <div class="card no-print">
+      <div class="card-title">Sipariş Ölçüleri</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label id="lbl-en">EN (mm) *</label>
+          <input type="number" id="inp-en" placeholder="örn. 1000" oninput="calc()" min="50" max="5000">
+        </div>
+        <div class="form-group">
+          <label id="lbl-boy">BOY (mm) *</label>
+          <input type="number" id="inp-boy" placeholder="örn. 1200" oninput="calc()" min="50" max="5000">
+        </div>
+        <div class="form-group">
+          <label>ADET</label>
+          <input type="number" id="inp-adet" value="1" min="1" max="100" oninput="calc()">
+        </div>
+        <div class="form-group" id="fg-alu">
+          <label>ALÜMİNYUM TÜRÜ</label>
+          <select id="inp-alu" onchange="calc()">
+            <option value="beyaz">Beyaz</option>
+            <option value="boyali">Boyalı</option>
+            <option value="eloksal">Eloksal</option>
+            <option value="ahsap" id="ahsap-opt">Ahşap (Duble)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>MÜŞTERİ ADI *</label>
+          <input type="text" id="inp-musteri" placeholder="Müşteri adı" list="musteri-list" oninput="suggestMusteri()">
+          <datalist id="musteri-list"></datalist>
+        </div>
+        <div class="form-group">
+          <label>ODA / YER</label>
+          <input type="text" id="inp-oda" placeholder="ör. Mutfak, Salon..." list="oda-list">
+          <datalist id="oda-list">
+            <option value="Mutfak"><option value="Salon"><option value="Yatak Odası">
+            <option value="Çocuk Odası"><option value="Banyo"><option value="Ofis">
+            <option value="Küçük Oda"><option value="Büyük Salon">
+          </datalist>
+        </div>
+        <div class="form-group">
+          <label>M² FİYATI (kr)</label>
+          <input type="number" id="inp-m2fiyat" value="480" min="1" oninput="calc()">
+        </div>
+        <div class="form-group" style="display:none">
+          <label>İSKONTO (%)</label>
+          <input type="number" id="inp-isk" value="0" min="0" max="90" oninput="calc()">
+        </div>
+      </div>
+    </div>
+
+    <!-- SONUÇLAR -->
+    <div id="results-area" style="display:none">
+      <div class="card">
+        <div class="section-header">
+          <div class="card-title" style="margin:0">Kesim Ölçüleri</div>
+          <span class="badge badge-blue" id="result-type-badge">TEKLİ PLİSE</span>
+        </div>
+        <div class="results-grid" id="kesim-grid"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Malzeme Listesi</div>
+        <table><thead><tr><th>Malzeme</th><th>Miktar</th><th>Birim</th><th>Birim Fiyat</th><th>Tutar</th></tr></thead>
+        <tbody id="malzeme-tbody"></tbody></table>
+      </div>
+      <div class="card">
+        <div class="card-title">Fiyat Özeti</div>
+        <div id="fiyat-rows"></div>
+        <button class="btn btn-green no-print" onclick="saveOrder()" style="margin-top:14px;width:100%">➕ Siparişe Ekle</button>
+      </div>
+    </div>
+
+    <div id="empty-state" class="empty">
+      <div class="empty-icon">📐</div>
+      <p>EN ve BOY değerlerini girin, tüm hesaplar otomatik görünsün</p>
+    </div>
+  </div>
+</div>
+
+<!-- SİPARİŞLER PAGE -->
+<div id="page-orders" style="display:none">
+  <div class="topbar">
+    <h2>Siparişler</h2>
+    <button class="btn btn-pdf-musteri no-print" onclick="pdfMusteriSec()">📄 Müşteri PDF</button>
+    <button class="btn btn-gray no-print" onclick="clearOrders()">Temizle</button>
+  </div>
+  <div class="content">
+    <div style="display:grid;grid-template-columns:1fr 2fr;gap:16px">
+      <div>
+        <div class="card">
+          <div class="section-header">
+            <div class="card-title" style="margin:0">Sipariş Listesi</div>
+            <span class="badge badge-green" id="order-count-badge">0 adet</span>
+          </div>
+          <div class="order-list" id="order-list-div">
+            <div class="empty"><div class="empty-icon">📭</div><p>Henüz sipariş eklenmedi</p></div>
+          </div>
+        </div>
+      </div>
+      <div id="order-detail-div">
+        <div class="empty card" style="padding:40px"><div class="empty-icon">👈</div><p>Soldaki listeden bir sipariş seçin</p></div>
+      </div>
+    </div>
+    <div class="card" id="orders-summary" style="display:none">
+      <div class="card-title">Genel Özet</div>
+      <div id="summary-content"></div>
+    </div>
+  </div>
+</div>
+
+<!-- FİYATLAR PAGE -->
+<div id="page-prices" style="display:none">
+  <div class="topbar"><h2>Malzeme Fiyatları</h2></div>
+  <div class="content">
+    <div class="card">
+      <div class="card-title">Alüminyum Profil Fiyatları (₺/mt)</div>
+      <table><thead><tr><th>Tür</th><th>Fiyat</th></tr></thead><tbody>
+        <tr><td>Beyaz</td><td class="td-num">9.50 ₺/mt</td></tr>
+        <tr><td>Boyalı</td><td class="td-num">10.00 ₺/mt</td></tr>
+        <tr><td>Eloksal</td><td class="td-num">10.60 ₺/mt</td></tr>
+        <tr><td>Ahşap (Duble)</td><td class="td-num">13.90 ₺/mt</td></tr>
+      </tbody></table>
+    </div>
+    <div class="card">
+      <div class="card-title">Kesim Formülleri – PLİSE 2.8 (mm)</div>
+      <table><thead><tr><th>Ölçü</th><th>Tekli</th><th>Duble</th></tr></thead><tbody>
+        <tr><td>Kasa EN</td><td>EN − 4 mm</td><td>EN − 4 mm</td></tr>
+        <tr><td>Kasa BOY</td><td>BOY − 7.2 mm</td><td>BOY − 7.5 mm</td></tr>
+        <tr><td>Kanat</td><td>BOY − 7.7 mm</td><td>BOY − 7.8 mm</td></tr>
+        <tr><td>Tül BOY</td><td>BOY − 4.6 mm</td><td>BOY − 4 mm</td></tr>
+        <tr><td>KAT</td><td>EN × 1.6 / 1000</td><td>EN / 2 × 0.5</td></tr>
+      </tbody></table>
+    </div>
+    <div class="card">
+      <div class="card-title">Kesim Formülleri – SİNEKLİK 1.9 (mm)</div>
+      <table><thead><tr><th>Ölçü</th><th>Tekli</th><th>Duble</th></tr></thead><tbody>
+        <tr><td>Kasa EN</td><td>EN − 55 mm</td><td>EN − 37 mm</td></tr>
+        <tr><td>Kasa BOY</td><td>BOY − 35 mm</td><td>BOY − 57 mm</td></tr>
+        <tr><td>Kanat</td><td>EN − 58 mm</td><td>BOY − 58 mm</td></tr>
+        <tr><td>Tül BOY</td><td>BOY − 104 mm</td><td>BOY − 40 mm</td></tr>
+        <tr><td>KAT</td><td>BOY / 22</td><td>EN / 44</td></tr>
+      </tbody></table>
+    </div>
+    <div class="card">
+      <div class="card-title">Kesim Formülleri – PERDE (mm)</div>
+      <table><thead><tr><th>Ölçü</th><th>Hareketli Kanat</th><th>Sabit Açılır</th></tr></thead><tbody>
+        <tr><td>Perde EN</td><td>CAM ENİ − 4 mm</td><td>CAM ENİ − 20 mm</td></tr>
+        <tr><td>Pile Sayısı</td><td>CAM BOYU × 0.045</td><td>CAM BOYU × 0.045</td></tr>
+        <tr><td>Alüminyum Profil</td><td>= Perde EN</td><td>= Perde EN</td></tr>
+        <tr><td>Yapışkanlı Şerit</td><td>= Perde EN</td><td>= Perde EN</td></tr>
+        <tr><td>İp Boyu</td><td>CAM ENİ + CAM BOYU + 350</td><td>CAM ENİ + CAM BOYU + 350</td></tr>
+      </tbody></table>
+    </div>
+  </div>
+</div>
+
+</div><!-- /main -->
+</div><!-- /app -->
+
+<!-- MOBILE BOTTOM NAV -->
+<nav class="mobile-nav">
+  <button class="mobile-nav-btn active" id="mnav-calc" onclick="showPage('calc')">
+    <span class="mnav-icon">📐</span>Hesap
+  </button>
+  <button class="mobile-nav-btn" id="mnav-orders" onclick="showPage('orders')">
+    <span class="mnav-icon">📋</span>Siparişler
+  </button>
+  <button class="mobile-nav-btn" id="mnav-prices" onclick="showPage('prices')">
+    <span class="mnav-icon">💰</span>Fiyatlar
+  </button>
+</nav>
+
+<!-- PDF OVERLAY -->
+<div id="pdf-overlay">
+  <button class="pdf-close-btn no-print" onclick="closePDF()">✕ Kapat</button>
+  <button class="pdf-print-btn no-print" onclick="window.print()">🖨️ Yazdır / PDF</button>
+  <div id="pdf-content"></div>
+</div>
+
+<script>
+// ─── SABİTLER ────────────────────────────────────────────────────────────────
+
+const ALU_PRICES = { beyaz: 9.5, boyali: 10.0, eloksal: 10.6, ahsap: 13.9 };
+
+// Tekli Plise 2.8 (mm)
+const P = {
+  kasaEn: 4, kasaBoy: 7.2, kanat: 7.7, tul: 4.6,
+  kat: 1.6, ipYana: 20, ipAsagi: 15,
+  fTul: 130, fBant: 25/50, fSerit: 0.867, fIp: 300, fPTakim: 5.5,
+};
+// Duble Plise 2.8 (mm)
+const D = {
+  kasaEn: 4, kasaBoy: 7.5, kanat: 7.8, tul: 4,
+  fTul: 6, fBant: 6/50, fSerit: 0.3, fIp: 90, fPTakim: 2, fMiknat: 6,
+};
+// Sineklik 1.9 Tekli (mm)
+const S1 = { kasaEn: 55, kasaBoy: 35, kanat: 58, tul: 104, katDiv: 22 };
+// Sineklik 1.9 Duble (mm)
+const S2 = { kasaEn: 37, kasaBoy: 57, kanat: 58, tul: 40, katDiv: 44 };
+
+// STATE
+let currentProduct = 'plise'; // 'plise' | 'sineklik' | 'perde'
+let currentSubtype = 0;       // 0=tekli/hareketli, 1=duble/sabit
+
+const PRODUCT_CONFIG = {
+  plise:    { tabs: ['Tekli', 'Duble'], enLbl: 'EN (mm) *', boyLbl: 'BOY (mm) *', showAlu: true },
+  sineklik: { tabs: ['Tekli', 'Duble'], enLbl: 'CAM ENİ (mm) *', boyLbl: 'CAM BOYU (mm) *', showAlu: false },
+  perde:    { tabs: ['Hareketli Kanat', 'Sabit Açılır'], enLbl: 'CAM ENİ (mm) *', boyLbl: 'CAM BOYU (mm) *', showAlu: false },
+};
+
+let orders = JSON.parse(localStorage.getItem('plise_orders') || '[]');
+let selectedOrder = null;
+
+// ─── ÜRÜN SEÇİM ──────────────────────────────────────────────────────────────
+
+function setProduct(prod) {
+  currentProduct = prod;
+  currentSubtype = 0;
+  ['plise','sineklik','perde'].forEach(p => document.getElementById('pb-'+p).classList.toggle('active', p===prod));
+  const cfg = PRODUCT_CONFIG[prod];
+  // Update sub-tabs
+  const tabsCont = document.getElementById('subtype-tabs');
+  tabsCont.innerHTML = cfg.tabs.map((t,i) =>
+    `<button class="tab-btn ${i===0?'active':''}" id="tab-sub${i}" onclick="setSubtype(${i})">${t}</button>`
+  ).join('');
+  // Update labels
+  document.getElementById('lbl-en').textContent = cfg.enLbl;
+  document.getElementById('lbl-boy').textContent = cfg.boyLbl;
+  document.getElementById('fg-alu').style.display = cfg.showAlu ? '' : 'none';
+  // Update ahsap option
+  if (cfg.showAlu) document.getElementById('ahsap-opt').style.display = prod==='plise'&&currentSubtype===1?'':'none';
+  // Topbar title
+  const titles = { plise:'Plise Hesaplayıcı (2.8)', sineklik:'Sineklik Hesaplayıcı (1.9)', perde:'Perde Hesaplayıcı' };
+  document.getElementById('calc-topbar-title').textContent = titles[prod];
+  calc();
+}
+
+function setSubtype(idx) {
+  currentSubtype = idx;
+  PRODUCT_CONFIG[currentProduct].tabs.forEach((_,i) => {
+    const el = document.getElementById('tab-sub'+i);
+    if (el) el.classList.toggle('active', i===idx);
+  });
+  if (currentProduct === 'plise') {
+    document.getElementById('ahsap-opt').style.display = idx===1 ? '' : 'none';
+    if (idx===0 && document.getElementById('inp-alu').value==='ahsap')
+      document.getElementById('inp-alu').value='beyaz';
+  }
+  calc();
+}
+
+// ─── HESAPLAMA ────────────────────────────────────────────────────────────────
+
+function calc() {
+  const en   = parseFloat(document.getElementById('inp-en').value) || 0;
+  const boy  = parseFloat(document.getElementById('inp-boy').value) || 0;
+  const adet = parseInt(document.getElementById('inp-adet').value) || 1;
+  const isk  = parseFloat(document.getElementById('inp-isk').value) || 0;
+  const alu  = document.getElementById('inp-alu').value;
+
+  if (en < 50 || boy < 50) {
+    document.getElementById('results-area').style.display = 'none';
+    document.getElementById('empty-state').style.display = 'block';
+    return;
+  }
+  document.getElementById('results-area').style.display = 'block';
+  document.getElementById('empty-state').style.display = 'none';
+
+  if (currentProduct === 'plise') {
+    if (currentSubtype === 0) calcPlise(en, boy, adet, alu, isk);
+    else calcDuble(en, boy, adet, alu, isk);
+  } else if (currentProduct === 'sineklik') {
+    if (currentSubtype === 0) calcSineklikTekli(en, boy, adet, isk);
+    else calcSineklikDuble(en, boy, adet, isk);
+  } else {
+    calcPerde(en, boy, adet, isk);
+  }
+}
+
+// ── PLİSE 2.8 TEKLİ ──
+function calcPlise(en, boy, adet, alu, isk) {
+  const aluP = ALU_PRICES[alu] || 9.5;
+  const kasaEn  = r(en  - P.kasaEn);
+  const kasaBoy = r(boy - P.kasaBoy);
+  const kanat   = r(boy - P.kanat);
+  const tulBoy  = r(boy - P.tul);
+  const katAdet = r(en * P.kat / 1000);
+  const ipMt    = r(((boy*P.ipYana/1000)+(boy*P.ipAsagi/1000))*2);
+  const bantMt  = r(kasaBoy * 2);
+  const seritMt = r(kasaBoy * 2);
+
+  const aluMt = (kasaEn*2 + kasaBoy*2 + kanat) / 1000;
+  const aluT  = aluMt * aluP;
+  const tulM2 = (en/1000)*(tulBoy/1000);
+  const tulT  = tulM2 * P.fTul;
+  const ipT   = ipMt * (P.fIp/1500);
+  const bantT = bantMt * P.fBant;
+  const seritT= seritMt * P.fSerit;
+  const takimT= P.fPTakim;
+  const sub   = aluT + tulT + ipT + bantT + seritT + takimT;
+
+  document.getElementById('result-type-badge').textContent = 'TEKLİ PLİSE 2.8';
+  document.getElementById('result-type-badge').className = 'badge badge-blue';
+  document.getElementById('kesim-grid').innerHTML = `
+    ${ri('Kasa EN', kasaEn,'mm','× 2 adet','blue')}${ri('Kasa BOY',kasaBoy,'mm','× 2 adet','blue')}
+    ${ri('Kanat',kanat,'mm','× 1 adet','green')}${ri('Tül BOY',tulBoy,'mm','','green')}
+    ${ri('KAT',katAdet.toFixed(1),'adet','','amber')}${ri('İP',ipMt,'mt','','amber')}
+    ${ri('Bant',bantMt,'mt','× 2 şerit','')}${ri('Plastik Şerit',seritMt,'mt','× 2 adet','')}
+    ${ri('Plise Takım',1,'takım','','')}`;
+  document.getElementById('malzeme-tbody').innerHTML = `
+    <tr><td>Alüminyum (${alu})</td><td>${aluMt.toFixed(3)}</td><td>MT</td><td>${aluP.toFixed(2)} ₺</td><td><b>${aluT.toFixed(2)} ₺</b></td></tr>
+    <tr><td>Tül</td><td>${tulM2.toFixed(4)}</td><td>M2</td><td>130.00 ₺</td><td><b>${tulT.toFixed(2)} ₺</b></td></tr>
+    <tr><td>İp</td><td>${ipMt.toFixed(2)}</td><td>MT</td><td>0.20 ₺</td><td><b>${ipT.toFixed(2)} ₺</b></td></tr>
+    <tr><td>Bant</td><td>${bantMt.toFixed(2)}</td><td>MT</td><td>0.50 ₺</td><td><b>${bantT.toFixed(2)} ₺</b></td></tr>
+    <tr><td>Plastik Şerit</td><td>${seritMt.toFixed(2)}</td><td>MT</td><td>0.87 ₺</td><td><b>${seritT.toFixed(2)} ₺</b></td></tr>
+    <tr><td>Plise Takım</td><td>1</td><td>TAKIM</td><td>5.50 ₺</td><td><b>${takimT.toFixed(2)} ₺</b></td></tr>`;
+  renderFiyat(sub, adet, isk, { en, boy, adet, alu, isk, type:'plise', product:'plise',
+    kasaEn, kasaBoy, kanat, tulBoy, katAdet, ipMt, bantMt, seritMt, sub });
+}
+
+// ── PLİSE 2.8 DUBLE ──
+function calcDuble(en, boy, adet, alu, isk) {
+  const aluP = ALU_PRICES[alu] || 9.5;
+  const kasaEn   = r(en  - D.kasaEn);
+  const kasaBoy  = r(boy - D.kasaBoy);
+  const kasaBoy2 = r(boy - 7.5);
+  const kanat    = r(boy - D.kanat);
+  const tulBoy   = r(boy - D.tul);
+  const kat      = r(en/2*0.5, 3);
+  const ipMt     = r(boy*1.695);
+  const bantMt   = r(kasaBoy*4);
+  const seritMt  = r(kasaBoy*4);
+  const miknatis = 1;
+
+  const aluMt = (kasaEn*2+kasaBoy*2+kasaBoy2*2+kanat*2)/1000;
+  const aluT  = aluMt*aluP;
+  const tulM2 = (en/1000)*(tulBoy/1000)*2;
+  const tulT  = tulM2*D.fTul;
+  const ipT   = ipMt*(D.fIp/1500);
+  const bantT = bantMt*D.fBant;
+  const seritT= seritMt*D.fSerit;
+  const takimT= D.fPTakim*2;
+  const mikT  = D.fMiknat;
+  const sub   = aluT+tulT+ipT+bantT+seritT+takimT+mikT;
+
+  document.getElementById('result-type-badge').textContent = 'DUBLE PLİSE 2.8';
+  document.getElementById('result-type-badge').className = 'badge badge-amber';
+  document.getElementById('kesim-grid').innerHTML = `
+    ${ri('Kasa EN',kasaEn,'mm','× 2 adet','blue')}${ri('Kasa BOY',kasaBoy,'mm','× 2 adet','blue')}
+    ${ri('Kanat',kanat,'mm','× 2 adet','green')}${ri('Tül BOY',tulBoy,'mm','× 2 katman','green')}
+    ${ri('KAT',kat.toFixed(3),'adet','','amber')}${ri('İP',ipMt,'mt','','amber')}
+    ${ri('Bant',bantMt,'mt','× 4 şerit','')}${ri('Plastik Şerit',seritMt,'mt','× 4 adet','')}
+    ${ri('Plise Takım',2,'takım','','')}${ri('Miknatis',miknatis,'takım','','red')}`;
+  document.getElementById('malzeme-tbody').innerHTML = `
+    <tr><td>Alüminyum (${alu})</td><td>${aluMt.toFixed(3)}</td><td>MT</td><td>${aluP.toFixed(2)} ₺</td><td><b>${aluT.toFixed(2)} ₺</b></td></tr>
+    <tr><td>Tül × 2</td><td>${tulM2.toFixed(4)}</td><td>M2</td><td>6.00 ₺</td><td><b>${tulT.toFixed(2)} ₺</b></td></tr>
+    <tr><td>İp</td><td>${ipMt.toFixed(2)}</td><td>MT</td><td>0.06 ₺</td><td><b>${ipT.toFixed(2)} ₺</b></td></tr>
+    <tr><td>Bant</td><td>${bantMt.toFixed(2)}</td><td>MT</td><td>0.12 ₺</td><td><b>${bantT.toFixed(2)} ₺</b></td></tr>
+    <tr><td>Plastik Şerit</td><td>${seritMt.toFixed(2)}</td><td>MT</td><td>0.30 ₺</td><td><b>${seritT.toFixed(2)} ₺</b></td></tr>
+    <tr><td>Plise Takım</td><td>2</td><td>TAKIM</td><td>2.00 ₺</td><td><b>${takimT.toFixed(2)} ₺</b></td></tr>
+    <tr><td>Miknatis</td><td>1</td><td>TAKIM</td><td>6.00 ₺</td><td><b>${mikT.toFixed(2)} ₺</b></td></tr>`;
+  renderFiyat(sub, adet, isk, { en, boy, adet, alu, isk, type:'duble', product:'plise',
+    kasaEn, kasaBoy, kanat, tulBoy, kat, ipMt, bantMt, seritMt, miknatis, sub });
+}
+
+// ── SİNEKLİK 1.9 TEKLİ ──
+function calcSineklikTekli(en, boy, adet, isk) {
+  const C = S1;
+  const kasaEn  = r(en  - C.kasaEn);
+  const kasaBoy = r(boy - C.kasaBoy);
+  const kanat   = r(en  - C.kanat);      // kanat from EN
+  const tulBoy  = r(boy - C.tul);
+  const kat     = r(boy / C.katDiv);
+  const bantMt  = r(tulBoy * 2 / 1000);  // in metres
+  const seritMt = r(tulBoy * 2 / 1000);
+
+  document.getElementById('result-type-badge').textContent = 'SİNEKLİK TEKLİ 1.9';
+  document.getElementById('result-type-badge').className = 'badge badge-teal';
+  document.getElementById('kesim-grid').innerHTML = `
+    ${ri('Kasa EN',kasaEn,'mm','× 2 adet','blue')}${ri('Kasa BOY',kasaBoy,'mm','× 2 adet','blue')}
+    ${ri('Kanat',kanat,'mm','× 1 adet','green')}${ri('Tül BOY',tulBoy,'mm','','green')}
+    ${ri('KAT',kat.toFixed(2),'adet','','amber')}
+    ${ri('Bant',bantMt,'mt','× 2 şerit','')}${ri('Plastik Şerit',seritMt,'mt','× 2 adet','')}
+    ${ri('Plise Takım',1,'takım','','')}`;
+  document.getElementById('malzeme-tbody').innerHTML = `
+    <tr><td>Kasa Alüminyum Profil (1.9)</td><td>${((kasaEn*2+kasaBoy*2+kanat)/1000).toFixed(3)}</td><td>MT</td><td>—</td><td>—</td></tr>
+    <tr><td>Tül</td><td>${((en/1000)*(tulBoy/1000)).toFixed(4)}</td><td>M2</td><td>—</td><td>—</td></tr>
+    <tr><td>Bant</td><td>${bantMt.toFixed(2)}</td><td>MT</td><td>—</td><td>—</td></tr>
+    <tr><td>Plastik Şerit</td><td>${seritMt.toFixed(2)}</td><td>MT</td><td>—</td><td>—</td></tr>
+    <tr><td>Plise Takım</td><td>1</td><td>TAKIM</td><td>—</td><td>—</td></tr>`;
+  renderFiyat(0, adet, isk, { en, boy, adet, isk, type:'sineklik-tekli', product:'sineklik',
+    kasaEn, kasaBoy, kanat, tulBoy, kat, bantMt, seritMt, sub: 0 });
+}
+
+// ── SİNEKLİK 1.9 DUBLE ──
+function calcSineklikDuble(en, boy, adet, isk) {
+  const C = S2;
+  const kasaEn  = r(en  - C.kasaEn);
+  const kasaBoy = r(boy - C.kasaBoy);
+  const kanat   = r(boy - C.kanat);      // kanat from BOY for duble
+  const tulBoy  = r(boy - C.tul);
+  const kat     = r(en / C.katDiv);
+  const bantMt  = r(tulBoy * 2 / 1000);
+  const seritMt = r(tulBoy * 4 / 1000);
+
+  document.getElementById('result-type-badge').textContent = 'SİNEKLİK DUBLE 1.9';
+  document.getElementById('result-type-badge').className = 'badge badge-teal';
+  document.getElementById('kesim-grid').innerHTML = `
+    ${ri('Kasa EN',kasaEn,'mm','× 2 adet','blue')}${ri('Kasa BOY',kasaBoy,'mm','× 2 adet','blue')}
+    ${ri('Kanat',kanat,'mm','× 2 adet','green')}${ri('Tül BOY',tulBoy,'mm','× 2 katman','green')}
+    ${ri('KAT',kat.toFixed(2),'adet','','amber')}
+    ${ri('Bant',bantMt,'mt','× 2 şerit','')}${ri('Plastik Şerit',seritMt,'mt','× 4 adet','')}
+    ${ri('Plise Takım',2,'takım','','')}${ri('Miknatis',1,'takım','','red')}`;
+  document.getElementById('malzeme-tbody').innerHTML = `
+    <tr><td>Kasa Alüminyum Profil (1.9)</td><td>${((kasaEn*2+kasaBoy*2+kanat*2)/1000).toFixed(3)}</td><td>MT</td><td>—</td><td>—</td></tr>
+    <tr><td>Tül × 2</td><td>${((en/1000)*(tulBoy/1000)*2).toFixed(4)}</td><td>M2</td><td>—</td><td>—</td></tr>
+    <tr><td>Bant</td><td>${bantMt.toFixed(2)}</td><td>MT</td><td>—</td><td>—</td></tr>
+    <tr><td>Plastik Şerit</td><td>${seritMt.toFixed(2)}</td><td>MT</td><td>—</td><td>—</td></tr>
+    <tr><td>Plise Takım</td><td>2</td><td>TAKIM</td><td>—</td><td>—</td></tr>
+    <tr><td>Miknatis</td><td>1</td><td>TAKIM</td><td>—</td><td>—</td></tr>`;
+  renderFiyat(0, adet, isk, { en, boy, adet, isk, type:'sineklik-duble', product:'sineklik',
+    kasaEn, kasaBoy, kanat, tulBoy, kat, bantMt, seritMt, miknatis:1, sub: 0 });
+}
+
+// ── PERDE ──
+function calcPerde(en, boy, adet, isk) {
+  const isHareketli = currentSubtype === 0;
+  const perdeEn   = r(en  - (isHareketli ? 4 : 20));    // mm offset
+  const pileSayisi= r(boy * 0.045);                      // pile count
+  const ipBoyu    = r(en + boy + 350);                   // mm
+  const typeName  = isHareketli ? 'perde-hareketli' : 'perde-sabit';
+  const labelName = isHareketli ? 'Hareketli Kanat' : 'Sabit Açılır';
+
+  document.getElementById('result-type-badge').textContent = 'PERDE – ' + labelName.toUpperCase();
+  document.getElementById('result-type-badge').className = 'badge badge-purple';
+  document.getElementById('kesim-grid').innerHTML = `
+    ${ri('Perde EN',perdeEn,'mm','× 1 adet','blue')}
+    ${ri('Pile Sayısı',pileSayisi.toFixed(2),'adet','','green')}
+    ${ri('Alüm. Profil',perdeEn,'mm','','blue')}
+    ${ri('Yap. Şerit',perdeEn,'mm','','green')}
+    ${ri('İp Boyu',ipBoyu,'mm','','amber')}`;
+  document.getElementById('malzeme-tbody').innerHTML = `
+    <tr><td>Alüminyum Profil</td><td>${(perdeEn/1000).toFixed(3)}</td><td>MT</td><td>—</td><td>—</td></tr>
+    <tr><td>Yapışkanlı Şerit</td><td>${(perdeEn/1000).toFixed(3)}</td><td>MT</td><td>—</td><td>—</td></tr>
+    <tr><td>İp</td><td>${(ipBoyu/1000).toFixed(3)}</td><td>MT</td><td>—</td><td>—</td></tr>`;
+  renderFiyat(0, adet, isk, { en, boy, adet, isk, type: typeName, product:'perde',
+    perdeEn, pileSayisi, ipBoyu, sub: 0 });
+}
+
+// ─── FİYAT RENDER ─────────────────────────────────────────────────────────────
+
+function r(v, d=1) { return Math.round(v * Math.pow(10,d)) / Math.pow(10,d); }
+
+function ri(label, val, unit, sub, color) {
+  const cls = color ? `result-item ${color}` : 'result-item';
+  return `<div class="${cls}"><div class="result-label">${label}</div>
+    <div class="result-value">${val}<span class="result-unit">${unit}</span></div>
+    ${sub ? `<div class="result-sub">${sub}</div>` : ''}</div>`;
+}
+
+function renderFiyat(internalCost, adet, isk, data) {
+  const en  = data.en, boy = data.boy;
+  const m2fiyat = parseFloat(document.getElementById('inp-m2fiyat').value) || 480;
+  const m2 = (en/1000) * (boy/1000);
+  const grundpris = m2 * m2fiyat * adet;
+  const moms = grundpris * 0.25;
+  const toplamMOMS = grundpris + moms;
+  document.getElementById('fiyat-rows').innerHTML = `
+    <div class="price-row"><span>Ölçü</span><span><b>${(en/1000).toFixed(3)} m × ${(boy/1000).toFixed(3)} m</b></span></div>
+    <div class="price-row"><span>Alan</span><span><b>${m2.toFixed(4)} m²</b></span></div>
+    <div class="price-row"><span>Birim fiyat</span><span>${m2fiyat.toFixed(0)} kr/m²</span></div>
+    ${adet>1?`<div class="price-row"><span>Adet</span><span>× ${adet}</span></div>`:''}
+    <div class="price-row"><span>Grundpris (MOMS hariç)</span><span><b>${grundpris.toFixed(2)} kr</b></span></div>
+    <div class="price-row"><span>MOMS (%25)</span><span style="color:#d97706">+ ${moms.toFixed(2)} kr</span></div>
+    <div class="price-row" style="border-top:2px solid #e2e8f0;margin-top:6px;padding-top:10px">
+      <span class="price-total">TOPLAM (inkl. MOMS)</span>
+      <span class="price-total">${toplamMOMS.toFixed(2)} kr</span>
+    </div>`;
+  Object.assign(data, { m2, m2fiyat, grundpris, moms, toplamMOMS, netFiyat: toplamMOMS });
+  window._calcData = data;
+}
+
+// ─── SİPARİŞ ─────────────────────────────────────────────────────────────────
+
+function getTypeName(o) {
+  const map = {
+    'plise':'Tekli Plise (2.8)', 'duble':'Duble Plise (2.8)',
+    'sineklik-tekli':'Sineklik Tekli (1.9)', 'sineklik-duble':'Sineklik Duble (1.9)',
+    'perde-hareketli':'Perde Hareketli', 'perde-sabit':'Perde Sabit'
+  };
+  return map[o.type] || o.type || 'Tekli Plise';
+}
+
+function getTypeClass(o) {
+  if (!o.type || o.type.startsWith('plise') || o.type==='duble') return '';
+  if (o.type.startsWith('sineklik')) return 'sineklik';
+  if (o.type.startsWith('perde')) return 'perde';
+  return '';
+}
+
+function saveOrder() {
+  if (!window._calcData) return;
+  const d = window._calcData;
+  const musteri = document.getElementById('inp-musteri').value.trim();
+  const oda = document.getElementById('inp-oda').value.trim() || '—';
+  if (!musteri) { alert('Lütfen müşteri adı girin!'); document.getElementById('inp-musteri').focus(); return; }
+  const order = { id: Date.now(), no: orders.length+1, musteri, oda, tarih: new Date().toLocaleDateString('tr-TR'), ...d };
+  orders.push(order);
+  localStorage.setItem('plise_orders', JSON.stringify(orders));
+  updateMusteriList();
+  alert(`✅ ${musteri} – ${oda} kaydedildi!`);
+  renderOrderList();
+}
+
+function updateMusteriList() {
+  const names = [...new Set(orders.map(o => o.musteri))];
+  document.getElementById('musteri-list').innerHTML = names.map(n=>`<option value="${n}">`).join('');
+}
+function suggestMusteri() { updateMusteriList(); }
+
+function renderOrderList() {
+  const div = document.getElementById('order-list-div');
+  document.getElementById('order-count-badge').textContent = `${orders.length} sipariş`;
+  if (!orders.length) {
+    div.innerHTML = '<div class="empty"><div class="empty-icon">📭</div><p>Henüz sipariş eklenmedi</p></div>';
+    document.getElementById('orders-summary').style.display = 'none';
+    return;
+  }
+  const grouped = {};
+  orders.forEach((o,i)=>{ if(!grouped[o.musteri])grouped[o.musteri]=[]; grouped[o.musteri].push({...o,_idx:i}); });
+  let html = '';
+  Object.entries(grouped).forEach(([musteri, items]) => {
+    const musteriToplam = items.reduce((s,o)=>s+(o.toplamMOMS||o.netFiyat||0), 0);
+    html += `<div style="margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 4px;border-bottom:2px solid var(--accent);margin-bottom:6px">
+        <span style="font-size:13px;font-weight:800">👤 ${musteri}</span>
+        <span style="font-size:12px;font-weight:700;color:var(--accent)">${musteriToplam.toFixed(2)} kr</span>
+      </div>
+      ${items.map(o => {
+        const d = o.durum||'bekliyor';
+        const dot = d==='bitti'?'🟢':d==='yapiliyor'?'🔵':'🟡';
+        const bgColor = d==='bitti'?'#16a34a':d==='yapiliyor'?'#2563eb':'#d97706';
+        return `<div class="order-item ${selectedOrder===o._idx?'active-order':''}" onclick="selectOrder(${o._idx})" style="margin-left:8px">
+          <div class="order-num" style="width:26px;height:26px;font-size:11px;background:${bgColor}">${o._idx+1}</div>
+          <div class="order-info">
+            <h4>${dot} ${o.oda||'—'}</h4>
+            <p>${o.en}×${o.boy}mm · ${getTypeName(o)} · ${o.adet} ad.</p>
+            <p style="color:var(--accent);font-weight:700">${(o.toplamMOMS||o.netFiyat||0).toFixed(2)} kr</p>
+          </div>
+          <button class="order-delete" onclick="deleteOrder(event,${o._idx})">✕</button>
+        </div>`;
+      }).join('')}
+    </div>`;
+  });
+  div.innerHTML = html;
+  renderSummary();
+  updateMusteriList();
+}
+
+function selectOrder(i) {
+  selectedOrder = i;
+  renderOrderList();
+  const o = orders[i];
+  const det = document.getElementById('order-detail-div');
+  const durum = o.durum||'bekliyor';
+  const durumBadge = { bekliyor:'<span class="status-bekliyor">⏳ Bekliyor</span>', yapiliyor:'<span class="status-yapiliyor">🔧 Yapılıyor</span>', bitti:'<span class="status-bitti">✅ Bitti</span>' }[durum];
+  const durumBtnHTML = durum!=='bitti'
+    ? `<button class="btn-yapiliyor" onclick="setDurum(${i},'yapiliyor')" ${durum==='yapiliyor'?'disabled':''}>🔧 Yapılıyor</button>
+       <button class="btn-bitti" onclick="setDurum(${i},'bitti')">✅ Bitti</button>`
+    : `<button class="btn-yapiliyor" onclick="setDurum(${i},'bekliyor')">↩ Geri Al</button>`;
+
+  const isPerde = o.type && o.type.startsWith('perde');
+  const kesimHTML = isPerde ? `
+    ${ri('Perde EN', o.perdeEn,'mm','','blue')}
+    ${ri('Pile Sayısı', (o.pileSayisi||0).toFixed(2),'adet','','green')}
+    ${ri('İp Boyu', o.ipBoyu,'mm','','amber')}` :
+    `${ri('Kasa EN',o.kasaEn,'mm','','blue')}
+     ${ri('Kasa BOY',o.kasaBoy,'mm','','blue')}
+     ${ri('Kanat',o.kanat,'mm','','green')}
+     ${ri('Tül BOY',o.tulBoy,'mm','','green')}
+     ${ri('İP',o.ipMt||'—','mt','','amber')}
+     ${ri('Bant',o.bantMt,'mt','','')}`;
+
+  const badgeClass = getTypeClass(o)==='sineklik'?'badge-teal':getTypeClass(o)==='perde'?'badge-purple':o.type==='duble'?'badge-amber':'badge-blue';
+  const fiyatHTML = o.toplamMOMS ? `
+    <div class="price-row"><span>Alan</span><span><b>${(o.m2||0).toFixed(4)} m²</b></span></div>
+    <div class="price-row"><span>Grundpris</span><span>${(o.grundpris||0).toFixed(2)} kr</span></div>
+    <div class="price-row"><span>MOMS %25</span><span style="color:#d97706">+ ${(o.moms||0).toFixed(2)} kr</span></div>
+    <div class="price-row" style="border-top:2px solid #e2e8f0;margin-top:4px;padding-top:8px">
+      <span class="price-total">TOPLAM inkl. MOMS</span><span class="price-total">${o.toplamMOMS.toFixed(2)} kr</span>
+    </div>` : `<div class="price-row"><span class="price-total">TOPLAM</span><span class="price-total">${(o.netFiyat||0).toFixed(2)} kr</span></div>`;
+
+  det.innerHTML = `<div class="card">
+    <div class="section-header" style="margin-bottom:10px">
+      <h3>${o.musteri}</h3>
+      <span class="badge ${badgeClass}">${getTypeName(o)}</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">${durumBadge}${durumBtnHTML}</div>
+    <div style="background:#f0fdf4;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:13px">
+      📍 <b>${o.oda||'—'}</b> &nbsp;·&nbsp; ${o.tarih}
+    </div>
+    <div class="results-grid" style="margin-bottom:16px">
+      ${ri('EN',o.en,'mm','','blue')}${ri('BOY',o.boy,'mm','','blue')}
+      ${ri('ADET',o.adet,'adet','','')}
+      ${ri('Toplam',(o.toplamMOMS||o.netFiyat||0).toFixed(2),'kr','inkl. MOMS','green')}
+    </div>
+    <div class="card-title">Kesim Ölçüleri</div>
+    <div class="results-grid" style="margin-bottom:16px">${kesimHTML}</div>
+    <div class="card-title">Fiyat</div>
+    ${fiyatHTML}
+    <div style="margin-top:12px;font-size:12px;color:var(--muted)">
+      ${o.alu?`Renk: <b>${o.alu}</b> ·`:''} ${o.m2fiyat||480} kr/m²
+    </div>
+  </div>`;
+}
+
+function deleteOrder(e, i) {
+  e.stopPropagation();
+  if (!confirm('Bu siparişi sil?')) return;
+  orders.splice(i,1); orders.forEach((o,idx)=>o.no=idx+1);
+  localStorage.setItem('plise_orders', JSON.stringify(orders));
+  selectedOrder = null;
+  document.getElementById('order-detail-div').innerHTML = '<div class="empty card" style="padding:40px"><div class="empty-icon">👈</div><p>Soldaki listeden bir sipariş seçin</p></div>';
+  renderOrderList();
+}
+
+function clearOrders() {
+  if (!orders.length) return;
+  if (!confirm('Tüm siparişler silinsin mi?')) return;
+  orders = []; localStorage.setItem('plise_orders', JSON.stringify(orders)); renderOrderList();
+}
+
+function renderSummary() {
+  if (!orders.length) { document.getElementById('orders-summary').style.display='none'; return; }
+  document.getElementById('orders-summary').style.display='block';
+  const toplam = orders.reduce((s,o)=>s+(o.toplamMOMS||o.netFiyat||0),0);
+  const grouped = {};
+  orders.forEach(o=>{
+    if(!grouped[o.musteri]) grouped[o.musteri]={orders:[],toplam:0};
+    grouped[o.musteri].orders.push(o);
+    grouped[o.musteri].toplam += (o.toplamMOMS||o.netFiyat||0);
+  });
+  const rows = Object.entries(grouped).map(([m,g])=>`
+    <tr><td><b>${m}</b></td><td>${g.orders.length}</td><td>${g.orders.map(o=>o.oda||'—').join(', ')}</td>
+    <td class="td-num" style="color:var(--accent)">${g.toplam.toFixed(2)} kr</td></tr>`).join('');
+  document.getElementById('summary-content').innerHTML = `
+    <table><thead><tr><th>Müşteri</th><th>Sipariş</th><th>Odalar</th><th>Toplam (inkl. MOMS)</th></tr></thead>
+    <tbody>${rows}</tbody>
+    <tfoot><tr style="background:#f0fdf4"><td colspan="3"><b>GENEL TOPLAM</b></td>
+    <td class="td-num" style="color:var(--accent);font-size:16px"><b>${toplam.toFixed(2)} kr</b></td></tr></tfoot>
+    </table>`;
+}
+
+function setDurum(idx, durum) {
+  orders[idx].durum = durum;
+  localStorage.setItem('plise_orders', JSON.stringify(orders));
+  renderOrderList(); selectOrder(idx);
+}
+
+// ─── PDF ──────────────────────────────────────────────────────────────────────
+
+function pdfMusteriSec() {
+  const musteriler = [...new Set(orders.map(o=>o.musteri))];
+  if (!musteriler.length) { alert('Henüz sipariş yok.'); return; }
+  if (musteriler.length===1) { generatePDF(musteriler[0]); return; }
+  const sec = prompt('PDF için müşteri seçin:\n'+musteriler.map((m,i)=>`${i+1}. ${m}`).join('\n')+'\n\nNumara girin:');
+  if (!sec) return;
+  const idx = parseInt(sec)-1;
+  if (musteriler[idx]) generatePDF(musteriler[idx]);
+}
+
+function generatePDF(musteriAdi) {
+  const musOrders = orders.filter(o=>o.musteri===musteriAdi);
+  const totalGrundpris = musOrders.reduce((s,o)=>s+(o.grundpris||0),0);
+  const totalMoms = musOrders.reduce((s,o)=>s+(o.moms||0),0);
+  const totalToplam = musOrders.reduce((s,o)=>s+(o.toplamMOMS||o.netFiyat||0),0);
+  const bugun = new Date().toLocaleDateString('da-DK', {day:'2-digit',month:'long',year:'numeric'});
+  const odalar = [...new Set(musOrders.map(o=>o.oda||'—'))].join(' · ');
+
+  const rows = musOrders.map((o,i) => {
+    const tc = getTypeClass(o);
+    const odaStr = o.oda || '—';
+    const olcu = `${o.en}×${o.boy} mm`;
+    const fiyat = (o.toplamMOMS||o.netFiyat||0).toFixed(2);
+    const grundpr = (o.grundpris||0).toFixed(2);
+    const momspr = (o.moms||0).toFixed(2);
+    const durumTxt = {bekliyor:'Bekliyor', yapiliyor:'Yapılıyor', bitti:'Bitti'}[o.durum||'bekliyor'];
+    return `<tr>
+      <td style="font-weight:700;color:#64748b;width:28px">${i+1}</td>
+      <td class="td-oda">${odaStr}</td>
+      <td><span class="td-type ${tc}">${getTypeName(o)}</span></td>
+      <td style="font-size:12px;white-space:nowrap">${olcu} × ${o.adet} ad.</td>
+      <td style="font-size:11px;color:#64748b">${(o.m2||0).toFixed(3)} m²</td>
+      <td style="text-align:right;font-size:12px;color:#475569">${grundpr} kr</td>
+      <td style="text-align:right;font-size:12px;color:#d97706">${momspr} kr</td>
+      <td class="td-price">${fiyat} kr</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('pdf-content').innerHTML = `
+    <div class="pdf-header">
+      <div>
+        <div class="pdf-logo">Plise<span>Hesap</span></div>
+        <div style="font-size:11px;color:#64748b;margin-top:3px">Teklif & Sipariş Özeti</div>
+      </div>
+      <div class="pdf-meta">
+        <div style="font-size:14px;font-weight:700;color:#0f172a">${bugun}</div>
+        <div style="margin-top:2px">${musOrders.length} kalem sipariş</div>
+      </div>
+    </div>
+
+    <div class="pdf-customer-bar">
+      <div>
+        <h2>👤 ${musteriAdi}</h2>
+        <p>${odalar}</p>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:20px;font-weight:900;color:#4ade80">${totalToplam.toFixed(2)} kr</div>
+        <div style="font-size:11px;color:rgba(255,255,255,.6)">inkl. MOMS</div>
+      </div>
+    </div>
+
+    <table class="pdf-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>ODA / YER</th>
+          <th>ÜRÜN</th>
+          <th>ÖLÇÜ × ADET</th>
+          <th>ALAN</th>
+          <th style="text-align:right">GRUNDPRIS</th>
+          <th style="text-align:right">MOMS 25%</th>
+          <th style="text-align:right">TOPLAM</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+
+    <div class="pdf-price-box">
+      <div class="pdf-price-row"><span>Toplam grundpris (MOMS hariç)</span><span>${totalGrundpris.toFixed(2)} kr</span></div>
+      <div class="pdf-price-row"><span>MOMS %25</span><span>${totalMoms.toFixed(2)} kr</span></div>
+      <div class="pdf-price-total"><span>TOPLAM inkl. MOMS</span><span>${totalToplam.toFixed(2)} kr</span></div>
+    </div>
+    <div class="pdf-footer-note">Bu belge Plise Hesap programı ile oluşturulmuştur · ${bugun}</div>
+  `;
+
+  document.getElementById('pdf-overlay').style.display = 'block';
+  window.scrollTo(0,0);
+}
+
+function closePDF() { document.getElementById('pdf-overlay').style.display='none'; }
+
+// ─── NAVİGASYON ──────────────────────────────────────────────────────────────
+
+function showPage(page) {
+  ['calc','orders','prices'].forEach(p=>{
+    const el = document.getElementById('page-'+p);
+    el.style.display = p===page ? 'flex' : 'none';
+    el.style.flexDirection = 'column';
+    document.getElementById('nav-'+p).classList.toggle('active', p===page);
+    const mn = document.getElementById('mnav-'+p);
+    if (mn) mn.classList.toggle('active', p===page);
+  });
+  if (page==='orders') renderOrderList();
+}
+
+function clearForm() {
+  ['inp-en','inp-boy','inp-musteri'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('inp-adet').value=1;
+  document.getElementById('inp-isk').value=0;
+  document.getElementById('inp-alu').value='beyaz';
+  document.getElementById('results-area').style.display='none';
+  document.getElementById('empty-state').style.display='block';
+  window._calcData=null;
+}
+
+// ─── PWA MANIFEST ────────────────────────────────────────────────────────────
+(function() {
+  const manifest = {
+    name: 'Üretim Hesaplayıcı',
+    short_name: 'PliseHesap',
+    start_url: window.location.href,
+    display: 'standalone',
+    background_color: '#0f172a',
+    theme_color: '#16a34a',
+    icons: [{
+      src: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%230f172a'/><text y='.9em' font-size='70' x='15'>🪟</text></svg>",
+      sizes: '192x192', type: 'image/svg+xml'
+    }]
+  };
+  const blob = new Blob([JSON.stringify(manifest)], {type:'application/json'});
+  const link = document.createElement('link');
+  link.rel = 'manifest'; link.href = URL.createObjectURL(blob);
+  document.head.appendChild(link);
+})();
+
+// INIT
+['calc','orders','prices'].forEach(p=>{
+  const el=document.getElementById('page-'+p);
+  el.style.display=p==='calc'?'flex':'none';
+  el.style.flexDirection='column';
+});
+document.getElementById('ahsap-opt').style.display='none';
+renderOrderList();
+</script>
+</body>
+</html>
