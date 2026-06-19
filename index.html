@@ -4,6 +4,46 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Üretim Hesaplayıcı</title>
+<script>
+(function(){
+  const KEY = 'ph_auth';
+  const PASS = 'ferdalturan';
+  if(sessionStorage.getItem(KEY) === '1') return;
+  document.addEventListener('DOMContentLoaded', function(){
+    var overlay = document.createElement('div');
+    overlay.id = 'auth-overlay';
+    overlay.style.cssText = 'position:fixed;inset:0;background:#0f172a;display:flex;align-items:center;justify-content:center;z-index:99999;';
+    overlay.innerHTML = `
+      <div style="background:#1e293b;border-radius:16px;padding:40px 36px;width:320px;box-shadow:0 25px 50px rgba(0,0,0,.5);text-align:center;">
+        <div style="font-size:48px;margin-bottom:16px;">🪟</div>
+        <h2 style="color:#fff;font-size:18px;font-weight:700;margin-bottom:6px;">Üretim Hesaplayıcı</h2>
+        <p style="color:rgba(255,255,255,.4);font-size:13px;margin-bottom:28px;">Devam etmek için şifreyi girin</p>
+        <input id="auth-input" type="password" placeholder="Şifre" style="width:100%;padding:12px 16px;border-radius:10px;border:2px solid rgba(255,255,255,.1);background:rgba(255,255,255,.07);color:#fff;font-size:15px;outline:none;margin-bottom:12px;text-align:center;letter-spacing:2px;">
+        <button id="auth-btn" style="width:100%;padding:12px;background:#16a34a;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;">Giriş</button>
+        <p id="auth-err" style="color:#ef4444;font-size:12px;margin-top:10px;display:none;">Yanlış şifre, tekrar deneyin.</p>
+      </div>`;
+    document.body.appendChild(overlay);
+    var inp = document.getElementById('auth-input');
+    var btn = document.getElementById('auth-btn');
+    var err = document.getElementById('auth-err');
+    function tryLogin(){
+      if(inp.value === PASS){
+        sessionStorage.setItem(KEY,'1');
+        overlay.remove();
+      } else {
+        err.style.display='block';
+        inp.value='';
+        inp.focus();
+        inp.style.borderColor='#ef4444';
+        setTimeout(function(){ inp.style.borderColor='rgba(255,255,255,.1)'; },1000);
+      }
+    }
+    btn.addEventListener('click', tryLogin);
+    inp.addEventListener('keydown', function(e){ if(e.key==='Enter') tryLogin(); });
+    inp.focus();
+  });
+})();
+</script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="PliseHesap">
