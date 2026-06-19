@@ -833,28 +833,33 @@ function showToast(msg, type) {
 }
 
 function saveOrder() {
-  if (!window._calcData) {
-    showToast('⚠️ Önce EN ve BOY girerek hesap yapın!', 'warn');
-    document.getElementById('inp-en').focus();
-    return;
+  try {
+    if (!window._calcData) {
+      showToast('⚠️ Önce EN ve BOY girerek hesap yapın!', 'warn');
+      document.getElementById('inp-en').focus();
+      return;
+    }
+    const d = window._calcData;
+    const enteredMusteri = document.getElementById('inp-musteri').value.trim();
+    const oda = document.getElementById('inp-oda').value.trim() || '—';
+    if (!enteredMusteri) {
+      showToast('⚠️ Müşteri adı giriniz!', 'warn');
+      document.getElementById('inp-musteri').focus();
+      return;
+    }
+    // null-safe case-insensitive match
+    const existing = orders.find(o => o.musteri && o.musteri.toLowerCase() === enteredMusteri.toLowerCase());
+    const musteri = existing ? existing.musteri : enteredMusteri;
+    const order = { id: Date.now(), no: orders.length+1, musteri, oda, tarih: new Date().toLocaleDateString('tr-TR'), ...d };
+    orders.push(order);
+    saveToFirestore();
+    updateMusteriList();
+    showToast(`✅ ${musteri} – ${oda} kaydedildi!`);
+    renderOrderList();
+  } catch(err) {
+    showToast('❌ Hata: ' + err.message, 'error');
+    console.error('saveOrder hatası:', err);
   }
-  const d = window._calcData;
-  const enteredMusteri = document.getElementById('inp-musteri').value.trim();
-  const oda = document.getElementById('inp-oda').value.trim() || '—';
-  if (!enteredMusteri) {
-    showToast('⚠️ Müşteri adı giriniz!', 'warn');
-    document.getElementById('inp-musteri').focus();
-    return;
-  }
-  // Match existing customer case-insensitively so "sinan" → "Sinan" if already exists
-  const existing = orders.find(o => o.musteri.toLowerCase() === enteredMusteri.toLowerCase());
-  const musteri = existing ? existing.musteri : enteredMusteri;
-  const order = { id: Date.now(), no: orders.length+1, musteri, oda, tarih: new Date().toLocaleDateString('tr-TR'), ...d };
-  orders.push(order);
-  saveToFirestore();
-  updateMusteriList();
-  showToast(`✅ ${musteri} – ${oda} kaydedildi!`);
-  renderOrderList();
 }
 
 function updateMusteriList() {
