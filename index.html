@@ -574,23 +574,36 @@ function calc() {
   const isk  = parseFloat(document.getElementById('inp-isk').value) || 0;
   const alu  = document.getElementById('inp-alu').value;
 
+  // Her zaman önce sıfırla
+  window._calcData = null;
+
   if (en < 50 || boy < 50) {
     document.getElementById('results-area').style.display = 'none';
     document.getElementById('empty-state').style.display = 'block';
     return;
   }
-  document.getElementById('results-area').style.display = 'block';
-  document.getElementById('empty-state').style.display = 'none';
 
-  if (currentProduct === 'plise') {
-    if (currentSubtype === 0) calcPlise(en, boy, adet, alu, isk);
-    else calcDuble(en, boy, adet, alu, isk);
-  } else if (currentProduct === 'sineklik') {
-    if (currentSubtype === 0) calcSineklikTekli(en, boy, adet, isk);
-    else calcSineklikDuble(en, boy, adet, isk);
-  } else {
-    calcPerde(en, boy, adet, isk);
+  // Hesapla — hata olursa yakala
+  try {
+    if (currentProduct === 'plise') {
+      if (currentSubtype === 0) calcPlise(en, boy, adet, alu, isk);
+      else calcDuble(en, boy, adet, alu, isk);
+    } else if (currentProduct === 'sineklik') {
+      if (currentSubtype === 0) calcSineklikTekli(en, boy, adet, isk);
+      else calcSineklikDuble(en, boy, adet, isk);
+    } else {
+      calcPerde(en, boy, adet, isk);
+    }
+  } catch(e) {
+    console.error('Hesap hatası:', e);
+    showToast('❌ Hesap hatası: ' + e.message, 'error');
+    window._calcData = null;
   }
+
+  // Hesap başarılıysa sonuçları göster, değilse gizle
+  const ok = !!window._calcData;
+  document.getElementById('results-area').style.display = ok ? 'block' : 'none';
+  document.getElementById('empty-state').style.display = ok ? 'none' : 'block';
 }
 
 // ── PLİSE 2.8 TEKLİ ──
