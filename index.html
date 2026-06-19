@@ -210,6 +210,8 @@
     .form-group input, .form-group select { font-size: 16px; } /* prevents zoom on iOS */
   }
 </style>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
 <div class="app">
@@ -470,8 +472,35 @@ const PRODUCT_CONFIG = {
   perde:    { tabs: ['Hareketli Kanat', 'Sabit Açılır'], enLbl: 'CAM ENİ (mm) *', boyLbl: 'CAM BOYU (mm) *', showAlu: false },
 };
 
-let orders = JSON.parse(localStorage.getItem('plise_orders') || '[]');
+// ─── FİREBASE SETUP ──────────────────────────────────────────────────────────
+firebase.initializeApp({
+  apiKey: "AIzaSyCe1KR1stHECBz2r22QCAqbzJiWmQAiM8M",
+  authDomain: "mygenet-e8832.firebaseapp.com",
+  projectId: "mygenet-e8832",
+  storageBucket: "mygenet-e8832.firebasestorage.app",
+  messagingSenderId: "477266983972",
+  appId: "1:477266983972:web:134ac56504fccf87b12cb1"
+});
+const db = firebase.firestore();
+const ordersDocRef = db.collection('plisehesap').doc('siparisler');
+
+let orders = [];
 let selectedOrder = null;
+
+function saveToFirestore() {
+  ordersDocRef.set({ list: orders }).catch(e => console.error('Firestore kayıt hatası:', e));
+}
+
+// Gerçek zamanlı dinleyici - tüm cihazlarda anında güncelleme
+ordersDocRef.onSnapshot(snap => {
+  if (snap.exists) {
+    orders = snap.data().list || [];
+  } else {
+    orders = [];
+  }
+  renderOrderList();
+  updateMusteriList();
+}, err => console.error('Firestore bağlantı hatası:', err));
 
 // ─── ÜRÜN SEÇİM ──────────────────────────────────────────────────────────────
 
@@ -768,7 +797,7 @@ function saveOrder() {
   if (!musteri) { alert('Lütfen müşteri adı girin!'); document.getElementById('inp-musteri').focus(); return; }
   const order = { id: Date.now(), no: orders.length+1, musteri, oda, tarih: new Date().toLocaleDateString('tr-TR'), ...d };
   orders.push(order);
-  localStorage.setItem('plise_orders', JSON.stringify(orders));
+  saveToFirestore();
   updateMusteriList();
   alert(`✅ ${musteri} – ${oda} kaydedildi!`);
   renderOrderList();
@@ -880,7 +909,7 @@ function deleteOrder(e, i) {
   e.stopPropagation();
   if (!confirm('Bu siparişi sil?')) return;
   orders.splice(i,1); orders.forEach((o,idx)=>o.no=idx+1);
-  localStorage.setItem('plise_orders', JSON.stringify(orders));
+  saveToFirestore();
   selectedOrder = null;
   document.getElementById('order-detail-div').innerHTML = '<div class="empty card" style="padding:40px"><div class="empty-icon">👈</div><p>Soldaki listeden bir sipariş seçin</p></div>';
   renderOrderList();
@@ -889,7 +918,7 @@ function deleteOrder(e, i) {
 function clearOrders() {
   if (!orders.length) return;
   if (!confirm('Tüm siparişler silinsin mi?')) return;
-  orders = []; localStorage.setItem('plise_orders', JSON.stringify(orders)); renderOrderList();
+  orders = []; saveToFirestore(); renderOrderList();
 }
 
 function renderSummary() {
@@ -915,7 +944,7 @@ function renderSummary() {
 
 function setDurum(idx, durum) {
   orders[idx].durum = durum;
-  localStorage.setItem('plise_orders', JSON.stringify(orders));
+  saveToFirestore();
   renderOrderList(); selectOrder(idx);
 }
 
