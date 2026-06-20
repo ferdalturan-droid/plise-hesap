@@ -707,7 +707,7 @@ function calcPlise(en, boy, adet, alu, isk) {
   document.getElementById('kesim-grid').innerHTML = `
     ${ri('Kasa EN', kasaEn,'mm','× 2 adet','blue')}${ri('Kasa BOY',kasaBoy,'mm','× 2 adet','blue')}
     ${ri('Kanat',kanat,'mm','× 1 adet','green')}${ri('Tül BOY',tulBoy,'mm','','green')}
-    ${ri('KAT',katAdet.toFixed(1),'adet','','amber')}${ri('İP',ipMt,'mt','','amber')}
+    ${ri('KAT',katAdet.toFixed(1),'kat','× 1 pencere','amber')}${ri('İP',ipMt,'mt','','amber')}
     ${ri('Bant',bantMt,'mt','× 2 şerit','')}${ri('Plastik Şerit',seritMt,'mt','× 2 adet','')}
     ${ri('Plise Takım',1,'takım','','')}`;
   (document.getElementById('malzeme-tbody')||{innerHTML:''}).innerHTML = `
@@ -730,8 +730,8 @@ function calcDuble(en, boy, adet, alu, isk) {
   const kasaBoy2 = r(boy - D.kanat);      // iç ray profili
   const kanat    = r(boy - D.kanat);
   const tulBoy   = r(boy - D.tul);
-  // KAT: KASA EN × 0.625 (YANA) veya KASA BOY × 0.625 (AŞAĞI)
-  const kat      = r((isYana ? kasaEn : kasaBoy) * 0.625, 3);
+  // KAT: Duble = (KASA EN / 2) / 2 = KASA EN / 4 (Excel Y9=2) — per-piece, NOT × adet
+  const kat      = r((isYana ? kasaEn : kasaBoy) / 4);
   const ipMt     = r(boy * 1.695 / 1000);
   const bantMt   = r(kasaBoy * 4 / 1000);
   const seritMt  = r(kasaBoy * 4 / 1000);
@@ -754,7 +754,7 @@ function calcDuble(en, boy, adet, alu, isk) {
   document.getElementById('kesim-grid').innerHTML = `
     ${ri('Kasa EN',kasaEn,'mm','× 2 adet','blue')}${ri('Kasa BOY',kasaBoy,'mm','× 2 adet','blue')}
     ${ri('Kanat',kanat,'mm','× 2 adet','green')}${ri('Tül BOY',tulBoy,'mm','× 2 katman','green')}
-    ${ri('KAT',kat.toFixed(3),'adet','','amber')}${ri('İP',ipMt,'mt','','amber')}
+    ${ri('KAT',kat.toFixed(1),'kat','× 1 pencere','amber')}${ri('İP',ipMt,'mt','','amber')}
     ${ri('Bant',bantMt,'mt','× 4 şerit','')}${ri('Plastik Şerit',seritMt,'mt','× 4 adet','')}
     ${ri('Plise Takım',2,'takım','','')}${ri('Miknatis',miknatis,'takım','','red')}`;
   (document.getElementById('malzeme-tbody')||{innerHTML:''}).innerHTML = `
@@ -789,7 +789,7 @@ function calcSineklikTekli(en, boy, adet, isk) {
   document.getElementById('kesim-grid').innerHTML = `
     ${ri('Kasa EN',kasaEn,'mm','× 2 adet','blue')}${ri('Kasa BOY',kasaBoy,'mm','× 2 adet','blue')}
     ${ri('Kanat',kanat,'mm','× 1 adet','green')}${ri('Tül BOY',tulBoy,'mm','','green')}
-    ${ri('KAT',kat.toFixed(2),'adet','','amber')}
+    ${ri('KAT',kat.toFixed(1),'kat','× 1 pencere','amber')}
     ${ri('Bant',bantMt,'mt','× 2 şerit','')}${ri('Plastik Şerit',seritMt,'mt','× 2 adet','')}
     ${ri('Plise Takım',1,'takım','','')}`;
   (document.getElementById('malzeme-tbody')||{innerHTML:''}).innerHTML = `
@@ -822,7 +822,7 @@ function calcSineklikDuble(en, boy, adet, isk) {
   document.getElementById('kesim-grid').innerHTML = `
     ${ri('Kasa EN',kasaEn,'mm','× 2 adet','blue')}${ri('Kasa BOY',kasaBoy,'mm','× 2 adet','blue')}
     ${ri('Kanat',kanat,'mm','× 2 adet','green')}${ri('Tül BOY',tulBoy,'mm','× 2 katman','green')}
-    ${ri('KAT',kat.toFixed(2),'adet','','amber')}
+    ${ri('KAT',kat.toFixed(1),'kat','× 1 pencere','amber')}
     ${ri('Bant',bantMt,'mt','× 2 şerit','')}${ri('Plastik Şerit',seritMt,'mt','× 4 adet','')}
     ${ri('Plise Takım',2,'takım','','')}${ri('Miknatis',1,'takım','','red')}`;
   (document.getElementById('malzeme-tbody')||{innerHTML:''}).innerHTML = `
@@ -1112,7 +1112,7 @@ function selectOrder(i) {
      ${ri('Kasa BOY',o.kasaBoy,'mm','× 2 adet','blue')}
      ${ri('Kanat',o.kanat,'mm',isDuble?'× 2 adet':'× 1 adet','green')}
      ${o.tulBoy ? ri('Tül BOY',o.tulBoy,'mm','','green') : ''}
-     ${(o.katAdet!=null||o.kat!=null) ? ri('KAT',(o.katAdet??o.kat),'adet','','amber') : ''}
+     ${(o.katAdet!=null||o.kat!=null) ? ri('KAT',(o.katAdet??o.kat),'kat','× 1 pencere','amber') : ''}
      ${o.ipMt ? ri('İP',safeM(o.ipMt),'mt','','amber') : ''}
      ${o.bantMt!=null ? ri('Bant',safeM(o.bantMt),'mt',kasaBoyAdet,'') : ''}
      ${o.seritMt ? ri('Şerit',safeM(o.seritMt),'mt',isDuble?'× 4 adet':'× 2 adet','') : ''}
