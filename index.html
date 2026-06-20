@@ -422,8 +422,8 @@
         <tr><td>Kasa BOY</td><td>BOY − 72 mm</td><td>BOY − 72 mm</td></tr>
         <tr><td>Kanat</td><td>BOY − 77 mm</td><td>BOY − 75 mm</td></tr>
         <tr><td>Tül BOY</td><td>BOY − 46 mm</td><td>BOY − 40 mm</td></tr>
-        <tr><td>KAT (YANA)</td><td>EN ÷ 16</td><td>EN ÷ 40</td></tr>
-        <tr><td>KAT (AŞAĞI)</td><td>BOY ÷ 16</td><td>BOY ÷ 40</td></tr>
+        <tr><td>KAT (YANA)</td><td>EN ÷ 1.6</td><td>EN ÷ 40</td></tr>
+        <tr><td>KAT (AŞAĞI)</td><td>BOY ÷ 1.6</td><td>BOY ÷ 40</td></tr>
         <tr><td>İP (YANA)</td><td>EN + BOY + 200 mm</td><td>—</td></tr>
         <tr><td>İP (AŞAĞI)</td><td>EN + BOY + 150 mm</td><td>—</td></tr>
       </tbody></table>
@@ -643,8 +643,8 @@ function calcPlise(en, boy, adet, alu, isk) {
   const kasaBoy = r(boy - P.kasaBoy);
   const kanat   = r(boy - P.kanat);
   const tulBoy  = r(boy - P.tul);
-  // KAT: YANA → EN / 16, AŞAĞI → BOY / 16
-  const katAdet = r((isYana ? en : boy) / (P.kat * 10));
+  // KAT: YANA → EN / 1.6 (= EN × 0.625), AŞAĞI → BOY / 1.6
+  const katAdet = r((isYana ? en : boy) / P.kat);
   // İP: EN + BOY + 200 (YANA) veya + 150 (AŞAĞI)
   const ipMt    = r((en + boy + (isYana ? P.ipYana : P.ipAsagi)) / 1000);
   const bantMt  = r(kasaBoy * 2 / 1000);
