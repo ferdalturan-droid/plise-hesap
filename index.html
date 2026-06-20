@@ -1020,8 +1020,11 @@ function selectOrder(i) {
      ${ri('Kasa BOY',o.kasaBoy,'mm','× 2 adet','blue')}
      ${ri('Kanat',o.kanat,'mm',isDuble?'× 2 adet':'× 1 adet','green')}
      ${o.tulBoy ? ri('Tül BOY',o.tulBoy,'mm','','green') : ''}
+     ${(o.katAdet!=null||o.kat!=null) ? ri('KAT',(o.katAdet??o.kat),'adet','','amber') : ''}
      ${o.ipMt ? ri('İP',safeM(o.ipMt),'mt','','amber') : ''}
-     ${o.bantMt!=null ? ri('Bant',safeM(o.bantMt),'mt',kasaBoyAdet,'') : ''}`;
+     ${o.bantMt!=null ? ri('Bant',safeM(o.bantMt),'mt',kasaBoyAdet,'') : ''}
+     ${o.seritMt ? ri('Şerit',safeM(o.seritMt),'mt',isDuble?'× 4 adet':'× 2 adet','') : ''}
+     ${o.miknatis ? ri('Mıknatıs',o.miknatis,'adet','','') : ''}`;
 
   const badgeClass = getTypeClass(o)==='sineklik'?'badge-teal':getTypeClass(o)==='perde'?'badge-purple':o.type==='duble'?'badge-amber':'badge-blue';
   const fiyatHTML = o.toplamMOMS ? `
