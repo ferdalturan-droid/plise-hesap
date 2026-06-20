@@ -316,12 +316,18 @@
           <input type="number" id="inp-adet" value="1" min="1" max="100" oninput="calc()">
         </div>
         <div class="form-group" id="fg-alu">
-          <label>ALÜMİNYUM TÜRÜ</label>
+          <label>RENK</label>
           <select id="inp-alu" onchange="calc()">
-            <option value="beyaz">Beyaz</option>
-            <option value="boyali">Boyalı</option>
-            <option value="eloksal">Eloksal</option>
-            <option value="ahsap" id="ahsap-opt">Ahşap (Duble)</option>
+            <option value="beyaz">⬜ Beyaz</option>
+            <option value="krem">🟫 Krem</option>
+            <option value="bej">🟨 Bej</option>
+            <option value="gri">🩶 Gri</option>
+            <option value="antrasit">🌑 Antrasit</option>
+            <option value="siyah">⬛ Siyah</option>
+            <option value="kahverengi">🟤 Kahverengi</option>
+            <option value="mahoni">🔴 Mahoni</option>
+            <option value="kiremit">🧱 Kiremit</option>
+            <option value="bordo">🟥 Bordo</option>
           </select>
         </div>
         <div class="form-group">
@@ -518,7 +524,10 @@
 <script>
 // ─── SABİTLER ────────────────────────────────────────────────────────────────
 
-const ALU_PRICES = { beyaz: 9.5, boyali: 10.0, eloksal: 10.6, ahsap: 13.9 };
+const ALU_PRICES = {
+  beyaz: 9.5, krem: 9.5, bej: 9.5, gri: 9.5, antrasit: 9.5,
+  siyah: 9.5, kahverengi: 9.5, mahoni: 9.5, kiremit: 9.5, bordo: 9.5
+};
 
 // Tekli Plise 2.8 (mm)
 const P = {
@@ -594,8 +603,6 @@ function setProduct(prod) {
   document.getElementById('lbl-en').textContent = cfg.enLbl;
   document.getElementById('lbl-boy').textContent = cfg.boyLbl;
   document.getElementById('fg-alu').style.display = cfg.showAlu ? '' : 'none';
-  // Update ahsap option
-  if (cfg.showAlu) document.getElementById('ahsap-opt').style.display = prod==='plise'&&currentSubtype===1?'':'none';
   // Topbar title
   const titles = { plise:'Plise Hesaplayıcı (2.8)', sineklik:'Sineklik Hesaplayıcı (1.9)', perde:'Perde Hesaplayıcı' };
   document.getElementById('calc-topbar-title').textContent = titles[prod];
@@ -625,11 +632,6 @@ function setSubtype(idx) {
     const el = document.getElementById('tab-sub'+i);
     if (el) el.classList.toggle('active', i===idx);
   });
-  if (currentProduct === 'plise') {
-    document.getElementById('ahsap-opt').style.display = idx===1 ? '' : 'none';
-    if (idx===0 && document.getElementById('inp-alu').value==='ahsap')
-      document.getElementById('inp-alu').value='beyaz';
-  }
   calc();
 }
 
@@ -1374,7 +1376,6 @@ function clearForm() {
   el.style.display=p==='calc'?'flex':'none';
   el.style.flexDirection='column';
 });
-document.getElementById('ahsap-opt').style.display='none';
 renderOrderList();
 </script>
 
