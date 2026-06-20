@@ -416,7 +416,7 @@
         <tr><td>Kasa BOY</td><td>BOY − 7.2 mm</td><td>BOY − 7.5 mm</td></tr>
         <tr><td>Kanat</td><td>BOY − 7.7 mm</td><td>BOY − 7.8 mm</td></tr>
         <tr><td>Tül BOY</td><td>BOY − 4.6 mm</td><td>BOY − 4 mm</td></tr>
-        <tr><td>KAT</td><td>EN × 1.6 / 1000</td><td>EN / 2 × 0.5</td></tr>
+        <tr><td>KAT</td><td>EN ÷ 16 mm</td><td>EN ÷ 40 mm</td></tr>
       </tbody></table>
     </div>
     <div class="card">
@@ -478,7 +478,7 @@ const P = {
 };
 // Duble Plise 2.8 (mm)
 const D = {
-  kasaEn: 4, kasaBoy: 7.5, kanat: 7.8, tul: 4,
+  kasaEn: 4, kasaBoy: 7.5, kanat: 7.8, tul: 4, katDiv: 40,
   fTul: 6, fBant: 6/50, fSerit: 0.3, fIp: 90, fPTakim: 2, fMiknat: 6,
 };
 // Sineklik 1.9 Tekli (mm)
@@ -613,7 +613,7 @@ function calcPlise(en, boy, adet, alu, isk) {
   const kasaBoy = r(boy - P.kasaBoy);
   const kanat   = r(boy - P.kanat);
   const tulBoy  = r(boy - P.tul);
-  const katAdet = r(en * P.kat / 1000);
+  const katAdet = r(en / (P.kat * 10));   // EN(mm) / 16  → kat adedi
   const ipMt    = r((boy * 2 + P.ipYana + P.ipAsagi) / 1000);
   const bantMt  = r(kasaBoy * 2 / 1000);
   const seritMt = r(kasaBoy * 2 / 1000);
@@ -655,7 +655,7 @@ function calcDuble(en, boy, adet, alu, isk) {
   const kasaBoy2 = r(boy - 7.5);
   const kanat    = r(boy - D.kanat);
   const tulBoy   = r(boy - D.tul);
-  const kat      = r(en/2*0.5, 3);
+  const kat      = r(en / D.katDiv, 3); // EN(mm) / 40  → kat adedi
   const ipMt     = r(boy * 1.695 / 1000);
   const bantMt   = r(kasaBoy * 4 / 1000);
   const seritMt  = r(kasaBoy * 4 / 1000);
