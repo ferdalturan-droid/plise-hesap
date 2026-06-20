@@ -418,12 +418,12 @@
     <div class="card">
       <div class="card-title">Kesim Formülleri – PLİSE 2.8 (mm)</div>
       <table><thead><tr><th>Ölçü</th><th>Tekli</th><th>Duble</th></tr></thead><tbody>
-        <tr><td>Kasa EN</td><td>EN − 40 mm</td><td>EN − 40 mm</td></tr>
-        <tr><td>Kasa BOY</td><td>BOY − 72 mm</td><td>BOY − 72 mm</td></tr>
-        <tr><td>Kanat</td><td>BOY − 77 mm</td><td>BOY − 75 mm</td></tr>
-        <tr><td>Tül BOY</td><td>BOY − 46 mm</td><td>BOY − 40 mm</td></tr>
-        <tr><td>KAT (YANA)</td><td>EN ÷ 1.6</td><td>EN ÷ 40</td></tr>
-        <tr><td>KAT (AŞAĞI)</td><td>BOY ÷ 1.6</td><td>BOY ÷ 40</td></tr>
+        <tr><td>Kasa EN</td><td>EN − 4 mm</td><td>EN − 4 mm</td></tr>
+        <tr><td>Kasa BOY</td><td>BOY − 7.2 mm</td><td>BOY − 7.2 mm</td></tr>
+        <tr><td>Kanat</td><td>BOY − 7.7 mm</td><td>BOY − 7.5 mm</td></tr>
+        <tr><td>Tül BOY</td><td>BOY − 4.6 mm</td><td>BOY − 4 mm</td></tr>
+        <tr><td>KAT (YANA)</td><td>Kasa EN × 0.625</td><td>Kasa EN × 0.625</td></tr>
+        <tr><td>KAT (AŞAĞI)</td><td>Kasa BOY × 0.625</td><td>Kasa BOY × 0.625</td></tr>
         <tr><td>İP (YANA)</td><td>EN + BOY + 200 mm</td><td>—</td></tr>
         <tr><td>İP (AŞAĞI)</td><td>EN + BOY + 150 mm</td><td>—</td></tr>
       </tbody></table>
@@ -436,8 +436,8 @@
         <tr><td>Kanat (AŞAĞI)</td><td>EN − 58 mm</td><td>EN − 58 mm</td></tr>
         <tr><td>Kanat (YANA)</td><td>BOY − 58 mm</td><td>BOY − 58 mm</td></tr>
         <tr><td>Tül BOY</td><td>BOY − 104 mm</td><td>BOY − 40 mm</td></tr>
-        <tr><td>KAT (AŞAĞI)</td><td>BOY / 22</td><td>BOY / 44</td></tr>
-        <tr><td>KAT (YANA)</td><td>EN / 22</td><td>EN / 44</td></tr>
+        <tr><td>KAT (AŞAĞI)</td><td>Kasa BOY × 0.625</td><td>Kasa BOY × 0.625</td></tr>
+        <tr><td>KAT (YANA)</td><td>Kasa EN × 0.625</td><td>Kasa EN × 0.625</td></tr>
       </tbody></table>
     </div>
     <div class="card">
@@ -481,15 +481,15 @@
 
 const ALU_PRICES = { beyaz: 9.5, boyali: 10.0, eloksal: 10.6, ahsap: 13.9 };
 
-// Tekli Plise 2.8 (mm) – Excel 2.8 değerleri ×10 (cm→mm)
+// Tekli Plise 2.8 (mm)
 const P = {
-  kasaEn: 40, kasaBoy: 72, kanat: 77, tul: 46,
-  kat: 1.6, ipYana: 200, ipAsagi: 150,
+  kasaEn: 4, kasaBoy: 7.2, kanat: 7.7, tul: 4.6,
+  ipYana: 200, ipAsagi: 150,
   fTul: 130, fBant: 25/50, fSerit: 0.867, fIp: 300, fPTakim: 5.5,
 };
-// Duble Plise 2.8 (mm) – Excel 2.8 değerleri ×10 (cm→mm)
+// Duble Plise 2.8 (mm) – kasaBoy ve kanat Excel'den düzeltildi
 const D = {
-  kasaEn: 40, kasaBoy: 72, kanat: 75, tul: 40, katDiv: 40,
+  kasaEn: 4, kasaBoy: 7.2, kanat: 7.5, tul: 4,
   fTul: 6, fBant: 6/50, fSerit: 0.3, fIp: 90, fPTakim: 2, fMiknat: 6,
 };
 // Sineklik 1.9 Tekli (mm)
@@ -643,8 +643,8 @@ function calcPlise(en, boy, adet, alu, isk) {
   const kasaBoy = r(boy - P.kasaBoy);
   const kanat   = r(boy - P.kanat);
   const tulBoy  = r(boy - P.tul);
-  // KAT: YANA → EN / 1.6 (= EN × 0.625), AŞAĞI → BOY / 1.6
-  const katAdet = r((isYana ? en : boy) / P.kat);
+  // KAT: KASA EN × 0.625 (YANA) veya KASA BOY × 0.625 (AŞAĞI)
+  const katAdet = r((isYana ? kasaEn : kasaBoy) * 0.625);
   // İP: EN + BOY + 200 (YANA) veya + 150 (AŞAĞI)
   const ipMt    = r((en + boy + (isYana ? P.ipYana : P.ipAsagi)) / 1000);
   const bantMt  = r(kasaBoy * 2 / 1000);
@@ -686,11 +686,11 @@ function calcDuble(en, boy, adet, alu, isk) {
   const aluP    = ALU_PRICES[alu] || 9.5;
   const kasaEn   = r(en  - D.kasaEn);
   const kasaBoy  = r(boy - D.kasaBoy);
-  const kasaBoy2 = r(boy - 75);           // iç ray profili (75mm offset)
+  const kasaBoy2 = r(boy - D.kanat);      // iç ray profili
   const kanat    = r(boy - D.kanat);
   const tulBoy   = r(boy - D.tul);
-  // KAT: YANA → EN / 40, AŞAĞI → BOY / 40
-  const kat      = r((isYana ? en : boy) / D.katDiv, 3);
+  // KAT: KASA EN × 0.625 (YANA) veya KASA BOY × 0.625 (AŞAĞI)
+  const kat      = r((isYana ? kasaEn : kasaBoy) * 0.625, 3);
   const ipMt     = r(boy * 1.695 / 1000);
   const bantMt   = r(kasaBoy * 4 / 1000);
   const seritMt  = r(kasaBoy * 4 / 1000);
@@ -737,8 +737,8 @@ function calcSineklikTekli(en, boy, adet, isk) {
   // AŞAĞI: kanat from EN, YANA: kanat from BOY
   const kanat   = r((isYana ? boy : en) - C.kanat);
   const tulBoy  = r(boy - C.tul);
-  // AŞAĞI: KAT = BOY / 22, YANA: KAT = EN / 22
-  const kat     = r((isYana ? en : boy) / C.katDiv);
+  // KAT: KASA EN × 0.625 (YANA) veya KASA BOY × 0.625 (AŞAĞI)
+  const kat     = r((isYana ? kasaEn : kasaBoy) * 0.625);
   const bantMt  = r(tulBoy * 2 / 1000);  // in metres
   const seritMt = r(tulBoy * 2 / 1000);
 
@@ -770,8 +770,8 @@ function calcSineklikDuble(en, boy, adet, isk) {
   // YANA: kanat from BOY, AŞAĞI: kanat from EN
   const kanat   = r((isYana ? boy : en) - C.kanat);
   const tulBoy  = r(boy - C.tul);
-  // YANA: KAT = EN / 44, AŞAĞI: KAT = BOY / 44
-  const kat     = r((isYana ? en : boy) / C.katDiv);
+  // KAT: KASA EN × 0.625 (YANA) veya KASA BOY × 0.625 (AŞAĞI)
+  const kat     = r((isYana ? kasaEn : kasaBoy) * 0.625);
   const bantMt  = r(tulBoy * 2 / 1000);
   const seritMt = r(tulBoy * 4 / 1000);
 
