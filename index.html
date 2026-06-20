@@ -259,8 +259,6 @@
     <div class="nav-section">Hesaplama</div>
     <button class="nav-btn active" onclick="showPage('calc')" id="nav-calc"><span class="nav-icon">📐</span> Hesaplayıcı</button>
     <button class="nav-btn" onclick="showPage('orders')" id="nav-orders"><span class="nav-icon">📋</span> Siparişler</button>
-    <div class="nav-section">Bilgi</div>
-    <button class="nav-btn" onclick="showPage('prices')" id="nav-prices"><span class="nav-icon">💰</span> Fiyatlar</button>
   </nav>
 </div>
 
@@ -410,12 +408,27 @@
     <button class="btn-back no-print" id="orders-back-btn" onclick="showCustomerList()" style="display:none">‹ Müşteriler</button>
     <h2 id="orders-title">Siparişler</h2>
     <span class="badge badge-green" id="order-count-badge" style="margin-right:auto">0</span>
+    <button class="btn btn-green no-print" id="btn-yeni-musteri" onclick="toggleYeniMusteri()">➕ Müşteri Ekle</button>
     <button class="btn btn-pdf-musteri no-print" onclick="pdfMusteriSec()">📄 PDF</button>
     <button class="btn btn-gray no-print" onclick="clearOrders()">Temizle</button>
   </div>
   <div class="content">
     <!-- MÜŞTERİ LİSTESİ -->
     <div id="customer-list-view">
+      <!-- YENİ MÜŞTERİ FORMU -->
+      <div id="yeni-musteri-form" class="card" style="display:none">
+        <div class="card-title">Yeni Müşteri</div>
+        <div class="form-group">
+          <label>Müşteri Adı *</label>
+          <input type="text" id="inp-yeni-musteri-ad" placeholder="Ad Soyad"
+            style="font-size:16px;width:100%;padding:10px;border:1px solid #e2e8f0;border-radius:8px"
+            onkeydown="if(event.key==='Enter') baslatYeniMusteri()">
+        </div>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button class="btn btn-green" onclick="baslatYeniMusteri()" style="flex:1">📐 Hesaplamaya Başla</button>
+          <button class="btn btn-gray" onclick="iptalYeniMusteri()">İptal</button>
+        </div>
+      </div>
       <div id="customer-cards-div"></div>
       <div class="card" id="orders-summary" style="display:none">
         <div class="card-title">Genel Özet</div>
@@ -492,9 +505,6 @@
   </button>
   <button class="mobile-nav-btn" id="mnav-orders" onclick="showPage('orders')">
     <span class="mnav-icon">📋</span>Siparişler
-  </button>
-  <button class="mobile-nav-btn" id="mnav-prices" onclick="showPage('prices')">
-    <span class="mnav-icon">💰</span>Fiyatlar
   </button>
 </nav>
 
@@ -969,6 +979,8 @@ function showCustomerList() {
   document.getElementById('customer-orders-view').style.display = 'none';
   document.getElementById('orders-back-btn').style.display = 'none';
   document.getElementById('orders-title').textContent = 'Siparişler';
+  const btn = document.getElementById('btn-yeni-musteri');
+  if (btn) btn.style.display = '';
 
   const div = document.getElementById('customer-cards-div');
   const totalAdet = orders.reduce((s,o)=>s+(parseInt(o.adet)||1),0);
@@ -1017,6 +1029,9 @@ function showCustomerOrders(musteri) {
   document.getElementById('customer-orders-view').style.display = 'block';
   document.getElementById('orders-back-btn').style.display = '';
   document.getElementById('orders-title').textContent = musteri;
+  // Müşteri detayındayken "Müşteri Ekle" butonunu gizle
+  const btn = document.getElementById('btn-yeni-musteri');
+  if (btn) btn.style.display = 'none';
   document.getElementById('order-detail-div').innerHTML = '';
   renderCustomerOrders();
 }
@@ -1275,18 +1290,52 @@ function generatePDF(musteriAdi) {
 
 function closePDF() { document.getElementById('pdf-overlay').style.display='none'; }
 
+// ─── YENİ MÜŞTERİ ────────────────────────────────────────────────────────────
+
+function toggleYeniMusteri() {
+  const form = document.getElementById('yeni-musteri-form');
+  const visible = form.style.display !== 'none';
+  form.style.display = visible ? 'none' : 'block';
+  if (!visible) {
+    document.getElementById('inp-yeni-musteri-ad').focus();
+    form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+}
+
+function baslatYeniMusteri() {
+  const ad = document.getElementById('inp-yeni-musteri-ad').value.trim();
+  if (!ad) { showToast('Müşteri adı giriniz', 'error'); return; }
+  document.getElementById('inp-musteri').value = ad;
+  document.getElementById('inp-yeni-musteri-ad').value = '';
+  document.getElementById('yeni-musteri-form').style.display = 'none';
+  showPage('calc');
+  showToast('✅ ' + ad + ' için hesaplama ekranı açıldı', 'success');
+}
+
+function iptalYeniMusteri() {
+  document.getElementById('inp-yeni-musteri-ad').value = '';
+  document.getElementById('yeni-musteri-form').style.display = 'none';
+}
+
 // ─── NAVİGASYON ──────────────────────────────────────────────────────────────
 
 function showPage(page) {
-  ['calc','orders','prices'].forEach(p=>{
+  ['calc','orders'].forEach(p=>{
     const el = document.getElementById('page-'+p);
+    if (!el) return;
     el.style.display = p===page ? 'flex' : 'none';
     el.style.flexDirection = 'column';
-    document.getElementById('nav-'+p).classList.toggle('active', p===page);
+    const nav = document.getElementById('nav-'+p);
+    if (nav) nav.classList.toggle('active', p===page);
     const mn = document.getElementById('mnav-'+p);
     if (mn) mn.classList.toggle('active', p===page);
   });
-  if (page==='orders') renderOrderList();
+  if (page==='orders') {
+    renderOrderList();
+    // "Müşteri Ekle" butonu sadece müşteri listesinde görünsün
+    const btn = document.getElementById('btn-yeni-musteri');
+    if (btn) btn.style.display = '';
+  }
 }
 
 function clearForm() {
