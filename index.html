@@ -84,16 +84,26 @@
   .card-title { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 14px; }
 
   /* PRODUCT TYPE SELECTOR */
-  .product-tabs { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
-  .product-btn { flex: 1; min-width: 80px; padding: 10px 6px; border: 2px solid var(--border); border-radius: 10px; cursor: pointer; font-size: 12px; font-weight: 700; background: white; color: var(--muted); transition: .15s; text-align: center; }
-  .product-btn:hover { border-color: var(--accent); color: var(--accent); }
-  .product-btn.active { border-color: var(--accent); background: #f0fdf4; color: var(--accent); }
-  .product-btn .pb-icon { font-size: 18px; display: block; margin-bottom: 3px; }
+  .product-tabs { display: flex; background: #eef2f7; border-radius: 16px; padding: 5px; gap: 4px; margin-bottom: 12px; box-shadow: inset 0 1px 4px rgba(0,0,0,.08); }
+  .product-btn { flex: 1; padding: 13px 6px 11px; border: none; border-radius: 12px; cursor: pointer; font-size: 10.5px; font-weight: 700; background: transparent; color: #94a3b8; transition: .2s; text-align: center; letter-spacing: .4px; text-transform: uppercase; }
+  .product-btn:hover { background: rgba(255,255,255,.55); color: #64748b; }
+  .product-btn.active { background: white; color: #16a34a; box-shadow: 0 2px 10px rgba(0,0,0,.13); }
+  .product-btn .pb-icon { font-size: 22px; display: block; margin-bottom: 5px; }
 
-  /* SUB TABS */
-  .tabs { display: flex; gap: 4px; background: var(--bg); border-radius: 10px; padding: 4px; margin-bottom: 20px; }
-  .tab-btn { flex: 1; padding: 9px; border: none; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; background: transparent; color: var(--muted); transition: .15s; }
-  .tab-btn.active { background: white; color: var(--text); box-shadow: 0 1px 4px rgba(0,0,0,.1); }
+  /* SELECTOR ROW (subtype + model combined) */
+  .selector-row { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+  .selector-sep { width: 1px; height: 26px; background: #cbd5e1; flex-shrink: 0; }
+  .tabs { display: flex; gap: 3px; background: #eef2f7; border-radius: 9px; padding: 3px; flex: 1; }
+  .tab-btn { flex: 1; padding: 7px 10px; border: none; border-radius: 7px; cursor: pointer; font-size: 12px; font-weight: 600; background: transparent; color: #94a3b8; transition: .15s; white-space: nowrap; }
+  .tab-btn.active { background: white; color: #1e293b; box-shadow: 0 1px 4px rgba(0,0,0,.1); }
+
+  /* CALC CUSTOMER BAR */
+  .calc-customer-bar { display: flex; align-items: center; justify-content: space-between; background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border-radius: 14px; padding: 13px 16px; margin-bottom: 14px; gap: 10px; }
+  .ccb-info { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+  .ccb-label { font-size: 9.5px; font-weight: 700; color: rgba(255,255,255,.4); letter-spacing: 1.2px; text-transform: uppercase; }
+  .ccb-name { font-size: 15px; font-weight: 700; color: white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ccb-name.empty { color: rgba(255,255,255,.35); font-weight: 400; font-size: 13px; font-style: italic; }
+  .btn-new-customer { flex-shrink: 0; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.18); color: white; padding: 8px 14px; border-radius: 9px; cursor: pointer; font-size: 12px; font-weight: 600; transition: .15s; }
 
   .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
   .form-group label { font-size: 11px; font-weight: 600; color: var(--muted); display: block; margin-bottom: 5px; }
@@ -231,9 +241,14 @@
     .content { padding: 16px 14px 90px; }
     .form-grid { grid-template-columns: 1fr; }
     .results-grid { grid-template-columns: 1fr 1fr; }
-    .product-tabs { gap: 4px; }
-    .product-btn { font-size: 11px; padding: 8px 4px; }
-    .product-btn .pb-icon { font-size: 16px; }
+    .product-tabs { padding: 4px; }
+    .product-btn { font-size: 10px; padding: 10px 3px 8px; }
+    .product-btn .pb-icon { font-size: 18px; margin-bottom: 3px; }
+    .selector-row { gap: 6px; }
+    .tab-btn { font-size: 11px; padding: 7px 6px; }
+    .calc-customer-bar { padding: 11px 13px; }
+    .ccb-name { font-size: 14px; }
+    .btn-new-customer { font-size: 11px; padding: 7px 11px; }
     #page-orders .content > div { grid-template-columns: 1fr !important; }
     .topbar { padding: 0 14px; }
     .topbar h2 { font-size: 14px; }
@@ -287,16 +302,39 @@
       </button>
     </div>
 
-    <!-- ALT TİP SEKMELER -->
-    <div class="tabs no-print" id="subtype-tabs">
-      <button class="tab-btn active" id="tab-sub0" onclick="setSubtype(0)">Tekli</button>
-      <button class="tab-btn" id="tab-sub1" onclick="setSubtype(1)">Duble</button>
+    <!-- ALT TİP + MODEL SEÇİMİ (tek sıra) -->
+    <div class="selector-row no-print">
+      <div class="tabs" id="subtype-tabs">
+        <button class="tab-btn active" id="tab-sub0" onclick="setSubtype(0)">Tekli</button>
+        <button class="tab-btn" id="tab-sub1" onclick="setSubtype(1)">Duble</button>
+      </div>
+      <div class="selector-sep"></div>
+      <div class="tabs" id="model-tabs">
+        <button class="tab-btn active" id="tab-model-yana" onclick="setModel('yana')">↔ YANA</button>
+        <button class="tab-btn" id="tab-model-asagi" onclick="setModel('asagi')">↕ AŞAĞI</button>
+      </div>
     </div>
 
-    <!-- MODEL SEÇİMİ – YANA / AŞAĞI -->
-    <div class="tabs no-print" id="model-tabs">
-      <button class="tab-btn active" id="tab-model-yana" onclick="setModel('yana')">↔ YANA</button>
-      <button class="tab-btn" id="tab-model-asagi" onclick="setModel('asagi')">↕ AŞAĞI</button>
+    <!-- AKTİF MÜŞTERİ BARI -->
+    <div class="calc-customer-bar no-print" id="calc-customer-bar">
+      <div class="ccb-info">
+        <span class="ccb-label">Aktif Müşteri</span>
+        <span class="ccb-name empty" id="ccb-name-display">Müşteri seçilmedi</span>
+      </div>
+      <button class="btn-new-customer" onclick="openCalcNewCustomer()">➕ Yeni Müşteri</button>
+    </div>
+
+    <!-- YENİ MÜŞTERİ FORMU (CALC) -->
+    <div id="calc-new-customer-form" class="card no-print" style="display:none;margin-bottom:12px">
+      <div style="font-size:13px;font-weight:700;margin-bottom:10px;color:#1e293b">Yeni Müşteri Ekle</div>
+      <input type="text" id="calc-inp-new-musteri" placeholder="Müşteri adını girin…"
+        style="width:100%;padding:11px 13px;border:1.5px solid #e2e8f0;border-radius:9px;font-size:15px;outline:none;margin-bottom:10px;box-sizing:border-box"
+        onkeydown="if(event.key==='Enter') confirmCalcCustomer()"
+        onfocus="this.style.borderColor='#16a34a'" onblur="this.style.borderColor='#e2e8f0'">
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-green" style="flex:1;padding:10px" onclick="confirmCalcCustomer()">✓ Başla</button>
+        <button class="btn btn-gray" onclick="cancelCalcNewCustomer()">İptal</button>
+      </div>
     </div>
 
     <!-- GİRİŞ -->
@@ -585,6 +623,7 @@ ordersDocRef.onSnapshot(snap => {
   }
   renderOrderList();
   updateMusteriList();
+  updateCalcCustomerBar();
 }, err => console.error('Firestore bağlantı hatası:', err));
 
 // ─── ÜRÜN SEÇİM ──────────────────────────────────────────────────────────────
@@ -966,7 +1005,43 @@ function updateMusteriList() {
   const names = [...new Set(orders.map(o => o.musteri))];
   document.getElementById('musteri-list').innerHTML = names.map(n=>`<option value="${n}">`).join('');
 }
-function suggestMusteri() { updateMusteriList(); }
+function suggestMusteri() { updateMusteriList(); updateCalcCustomerBar(); }
+
+// ─── CALC PAGE CUSTOMER BAR ───────────────────────────────────────────────────
+function updateCalcCustomerBar() {
+  const name = (document.getElementById('inp-musteri').value || '').trim();
+  const el = document.getElementById('ccb-name-display');
+  if (!el) return;
+  if (name) {
+    el.textContent = name;
+    el.className = 'ccb-name';
+  } else {
+    el.textContent = 'Müşteri seçilmedi';
+    el.className = 'ccb-name empty';
+  }
+}
+
+function openCalcNewCustomer() {
+  const form = document.getElementById('calc-new-customer-form');
+  form.style.display = 'block';
+  const inp = document.getElementById('calc-inp-new-musteri');
+  inp.value = '';
+  setTimeout(() => { inp.focus(); }, 50);
+  form.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function confirmCalcCustomer() {
+  const ad = document.getElementById('calc-inp-new-musteri').value.trim();
+  if (!ad) { showToast('Müşteri adı giriniz', 'error'); return; }
+  document.getElementById('inp-musteri').value = ad;
+  document.getElementById('calc-new-customer-form').style.display = 'none';
+  updateCalcCustomerBar();
+  showToast('✅ ' + ad + ' için hesaplama başladı');
+}
+
+function cancelCalcNewCustomer() {
+  document.getElementById('calc-new-customer-form').style.display = 'none';
+}
 
 function renderOrderList() {
   // If in customer view, refresh that; else show customer cards
@@ -1311,6 +1386,7 @@ function baslatYeniMusteri() {
   document.getElementById('inp-yeni-musteri-ad').value = '';
   document.getElementById('yeni-musteri-form').style.display = 'none';
   showPage('calc');
+  updateCalcCustomerBar();
   showToast('✅ ' + ad + ' için hesaplama ekranı açıldı', 'success');
 }
 
