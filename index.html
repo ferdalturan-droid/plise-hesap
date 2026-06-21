@@ -103,6 +103,7 @@
   .ccb-label { font-size: 9.5px; font-weight: 700; color: rgba(255,255,255,.4); letter-spacing: 1.2px; text-transform: uppercase; }
   .ccb-name { font-size: 15px; font-weight: 700; color: white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .ccb-name.empty { color: rgba(255,255,255,.35); font-weight: 400; font-size: 13px; font-style: italic; }
+  .ccb-phone { font-size: 12px; color: rgba(255,255,255,.5); margin-top: 1px; }
   .btn-new-customer { flex-shrink: 0; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.18); color: white; padding: 8px 14px; border-radius: 9px; cursor: pointer; font-size: 12px; font-weight: 600; transition: .15s; }
 
   .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
@@ -320,6 +321,7 @@
       <div class="ccb-info">
         <span class="ccb-label">Aktif Müşteri</span>
         <span class="ccb-name empty" id="ccb-name-display">Müşteri seçilmedi</span>
+        <span class="ccb-phone" id="ccb-phone-display"></span>
       </div>
       <button class="btn-new-customer" onclick="openCalcNewCustomer()">➕ Yeni Müşteri</button>
     </div>
@@ -327,7 +329,11 @@
     <!-- YENİ MÜŞTERİ FORMU (CALC) -->
     <div id="calc-new-customer-form" class="card no-print" style="display:none;margin-bottom:12px">
       <div style="font-size:13px;font-weight:700;margin-bottom:10px;color:#1e293b">Yeni Müşteri Ekle</div>
-      <input type="text" id="calc-inp-new-musteri" placeholder="Müşteri adını girin…"
+      <input type="text" id="calc-inp-new-musteri" placeholder="Ad Soyad *"
+        style="width:100%;padding:11px 13px;border:1.5px solid #e2e8f0;border-radius:9px;font-size:15px;outline:none;margin-bottom:8px;box-sizing:border-box"
+        onkeydown="if(event.key==='Enter') document.getElementById('calc-inp-new-telefon').focus()"
+        onfocus="this.style.borderColor='#16a34a'" onblur="this.style.borderColor='#e2e8f0'">
+      <input type="tel" id="calc-inp-new-telefon" placeholder="Telefon numarası"
         style="width:100%;padding:11px 13px;border:1.5px solid #e2e8f0;border-radius:9px;font-size:15px;outline:none;margin-bottom:10px;box-sizing:border-box"
         onkeydown="if(event.key==='Enter') confirmCalcCustomer()"
         onfocus="this.style.borderColor='#16a34a'" onblur="this.style.borderColor='#e2e8f0'">
@@ -372,6 +378,7 @@
           <label>MÜŞTERİ ADI *</label>
           <input type="text" id="inp-musteri" placeholder="Müşteri adı" list="musteri-list" oninput="suggestMusteri()">
           <datalist id="musteri-list"></datalist>
+          <input type="hidden" id="inp-telefon">
         </div>
         <div class="form-group">
           <label>ODA / YER</label>
@@ -465,6 +472,12 @@
         <div class="form-group">
           <label>Müşteri Adı *</label>
           <input type="text" id="inp-yeni-musteri-ad" placeholder="Ad Soyad"
+            style="font-size:16px;width:100%;padding:10px;border:1px solid #e2e8f0;border-radius:8px"
+            onkeydown="if(event.key==='Enter') document.getElementById('inp-yeni-musteri-tel').focus()">
+        </div>
+        <div class="form-group">
+          <label>Telefon</label>
+          <input type="tel" id="inp-yeni-musteri-tel" placeholder="Telefon numarası"
             style="font-size:16px;width:100%;padding:10px;border:1px solid #e2e8f0;border-radius:8px"
             onkeydown="if(event.key==='Enter') baslatYeniMusteri()">
         </div>
@@ -981,6 +994,7 @@ function saveOrder() {
     const d = window._calcData;
     const enteredMusteri = document.getElementById('inp-musteri').value.trim();
     const oda = document.getElementById('inp-oda').value.trim() || '—';
+    const telefon = (document.getElementById('inp-telefon').value || '').trim();
     if (!enteredMusteri) {
       showToast('⚠️ Müşteri adı giriniz!', 'warn');
       document.getElementById('inp-musteri').focus();
@@ -989,7 +1003,9 @@ function saveOrder() {
     // null-safe case-insensitive match
     const existing = orders.find(o => o.musteri && o.musteri.toLowerCase() === enteredMusteri.toLowerCase());
     const musteri = existing ? existing.musteri : enteredMusteri;
-    const order = { id: Date.now(), no: orders.length+1, musteri, oda, tarih: new Date().toLocaleDateString('tr-TR'), ...d };
+    // carry existing phone if new one not provided
+    const tel = telefon || (existing && existing.telefon) || '';
+    const order = { id: Date.now(), no: orders.length+1, musteri, oda, telefon: tel, tarih: new Date().toLocaleDateString('tr-TR'), ...d };
     orders.push(order);
     saveToFirestore();
     updateMusteriList();
@@ -1010,15 +1026,18 @@ function suggestMusteri() { updateMusteriList(); updateCalcCustomerBar(); }
 // ─── CALC PAGE CUSTOMER BAR ───────────────────────────────────────────────────
 function updateCalcCustomerBar() {
   const name = (document.getElementById('inp-musteri').value || '').trim();
-  const el = document.getElementById('ccb-name-display');
-  if (!el) return;
+  const phone = (document.getElementById('inp-telefon').value || '').trim();
+  const nameEl = document.getElementById('ccb-name-display');
+  const phoneEl = document.getElementById('ccb-phone-display');
+  if (!nameEl) return;
   if (name) {
-    el.textContent = name;
-    el.className = 'ccb-name';
+    nameEl.textContent = name;
+    nameEl.className = 'ccb-name';
   } else {
-    el.textContent = 'Müşteri seçilmedi';
-    el.className = 'ccb-name empty';
+    nameEl.textContent = 'Müşteri seçilmedi';
+    nameEl.className = 'ccb-name empty';
   }
+  if (phoneEl) phoneEl.textContent = phone ? '📞 ' + phone : '';
 }
 
 function openCalcNewCustomer() {
@@ -1026,6 +1045,7 @@ function openCalcNewCustomer() {
   form.style.display = 'block';
   const inp = document.getElementById('calc-inp-new-musteri');
   inp.value = '';
+  document.getElementById('calc-inp-new-telefon').value = '';
   setTimeout(() => { inp.focus(); }, 50);
   form.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
@@ -1033,7 +1053,9 @@ function openCalcNewCustomer() {
 function confirmCalcCustomer() {
   const ad = document.getElementById('calc-inp-new-musteri').value.trim();
   if (!ad) { showToast('Müşteri adı giriniz', 'error'); return; }
+  const tel = document.getElementById('calc-inp-new-telefon').value.trim();
   document.getElementById('inp-musteri').value = ad;
+  document.getElementById('inp-telefon').value = tel;
   document.getElementById('calc-new-customer-form').style.display = 'none';
   updateCalcCustomerBar();
   showToast('✅ ' + ad + ' için hesaplama başladı');
@@ -1071,20 +1093,22 @@ function showCustomerList() {
 
   const grouped = {};
   orders.forEach((o,i) => {
-    if (!grouped[o.musteri]) grouped[o.musteri] = { orders:[], toplam:0, adet:0, bitti:0 };
+    if (!grouped[o.musteri]) grouped[o.musteri] = { orders:[], toplam:0, adet:0, bitti:0, telefon: o.telefon||'' };
     grouped[o.musteri].orders.push({...o, _idx:i});
     grouped[o.musteri].toplam += (o.toplamMOMS||o.netFiyat||0);
     grouped[o.musteri].adet += (parseInt(o.adet)||1);
     if (o.durum==='bitti') grouped[o.musteri].bitti++;
+    if (!grouped[o.musteri].telefon && o.telefon) grouped[o.musteri].telefon = o.telefon;
   });
 
   div.innerHTML = Object.entries(grouped).map(([musteri, g]) => {
     const mus = musteri.replace(/'/g,"\\'");
     const durumTxt = g.bitti===g.orders.length ? '✅ Tümü bitti' : g.bitti>0 ? `${g.bitti}/${g.orders.length} bitti` : '⏳ Devam ediyor';
+    const telHTML = g.telefon ? `<span style="margin-left:6px;color:#94a3b8">📞 ${g.telefon}</span>` : '';
     return `<div class="customer-card" onclick="showCustomerOrders('${mus}')">
       <div class="customer-card-avatar">👤</div>
       <div class="customer-card-info">
-        <h3>${musteri}</h3>
+        <h3>${musteri}${telHTML}</h3>
         <p>${g.orders.length} sipariş · ${g.adet} adet &nbsp;·&nbsp; ${durumTxt}</p>
       </div>
       <div class="customer-card-right">
@@ -1210,6 +1234,7 @@ function selectOrder(i) {
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">${durumBadge}${durumBtnHTML}</div>
     <div style="background:#f0fdf4;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:13px">
       📍 <b>${o.oda||'—'}</b> &nbsp;·&nbsp; ${o.tarih}
+      ${o.telefon ? `&nbsp;·&nbsp; 📞 <b>${o.telefon}</b>` : ''}
     </div>
     <div class="results-grid" style="margin-bottom:16px">
       ${ri('EN',o.en,'mm','','blue')}${ri('BOY',o.boy,'mm','','blue')}
@@ -1382,8 +1407,11 @@ function toggleYeniMusteri() {
 function baslatYeniMusteri() {
   const ad = document.getElementById('inp-yeni-musteri-ad').value.trim();
   if (!ad) { showToast('Müşteri adı giriniz', 'error'); return; }
+  const tel = document.getElementById('inp-yeni-musteri-tel').value.trim();
   document.getElementById('inp-musteri').value = ad;
+  document.getElementById('inp-telefon').value = tel;
   document.getElementById('inp-yeni-musteri-ad').value = '';
+  document.getElementById('inp-yeni-musteri-tel').value = '';
   document.getElementById('yeni-musteri-form').style.display = 'none';
   showPage('calc');
   updateCalcCustomerBar();
@@ -1392,6 +1420,7 @@ function baslatYeniMusteri() {
 
 function iptalYeniMusteri() {
   document.getElementById('inp-yeni-musteri-ad').value = '';
+  document.getElementById('inp-yeni-musteri-tel').value = '';
   document.getElementById('yeni-musteri-form').style.display = 'none';
 }
 
